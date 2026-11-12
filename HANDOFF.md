@@ -61,13 +61,39 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 - Session : cookie httpOnly signé. Code invitation dans le lien.
 - Tests (vitest) : tirage (pas de soi-même, X cibles distinctes, X reçus), visibilité des idées, blocage des essais de code.
 
-## Reste à faire
+## Choix par défaut (tranchés pour travailler sans poser de questions)
 
-1. Relire les **commentaires Figma** non traités (la limite d'appels Figma a empêché de les lire en fin de conversation).
-2. Valider les thèmes et leurs mots (`design/themes-apercu.png`), puis les ajouter dans Figma.
-3. Construire l'app : squelette + thème Noël → API + Redis → tirage + animation → QG → fin de vie.
-4. Mise en ligne : projet Vercel, Upstash, domaine `1kdo.gaston.monster`, variables d'environnement, test avec de faux comptes, puis vraie liste.
-5. Infos à fournir par l'admin : liste (prénom + @insta) — saisie directement dans le QG, pas dans le code.
+| Sujet | Choix |
+|---|---|
+| Thèmes | Les 6 thèmes de `design/gen-themes.mjs` sont validés tels quels (couleurs + mots). Noël est soigné en priorité, les 5 autres doivent fonctionner. |
+| Référence visuelle | `design/gen-screens.mjs` (→ `out/screens.html`) est la **source de vérité** des écrans. Figma n'est qu'un complément (la limite d'appels peut bloquer). |
+| Compte | Un compte par @insta, **commun à tous les événements** (même code partout). Si la personne est dans plusieurs événements : écran « Mes événements » après connexion. |
+| Admin | Identifiée par la variable d'environnement `ADMIN_INSTA` (son @). Elle se connecte comme tout le monde (@ + code). Seule elle voit le QG et peut créer des événements. |
+| QG | Liste des événements + « Créer un événement » (titre, thème, date, lieu, budget, X cadeaux). Dans un événement : participants, liens perso, lancer le tirage, réglages, suppression. |
+| Lien perso | `/e/{eventId}?i={codeInvitation}&u={handle}`. Un code d'invitation par événement. Le @ est pré-rempli, le code à 6 chiffres reste demandé. |
+| Sans pronom choisi | Formule « iel » du thème par défaut (ex. « l'Esprit de Noël »). |
+| Fin de vie | Par événement : TTL Redis = date de l'événement + 3 jours ; ensuite la page de l'événement affiche « C'est fini ». Un compte expire quand il n'a plus d'événement actif. |
+| Sécurité | Code haché (scrypt), 5 essais puis blocage 15 min (compteur Redis), session = cookie httpOnly signé (`SESSION_SECRET`), 30 jours. Le serveur ne renvoie que les cibles de la personne connectée. Idées sur soi filtrées côté serveur. En-têtes de sécurité (CSP stricte) dans `vercel.json`. |
+| Polices | Auto-hébergées via `@fontsource` (pas de Google Fonts). |
+| Animations | Respecter `prefers-reduced-motion`. |
+| Stockage en local | Adaptateur mémoire quand les variables Upstash sont absentes (dev + tests). |
+| Données d'exemple | Uniquement des prénoms et @ fictifs (repo public). |
+
+## Plan d'exécution
+
+1. Squelette Vite + React + TS à la racine, `api/` pour les fonctions Vercel, thème Noël + système de thèmes (tokens CSS + vocabulaire).
+2. Stockage (Upstash + adaptateur mémoire), modèle de données, sessions, inscription / connexion / code.
+3. Événements, participants, liens perso, QG.
+4. Tirage (cercle secret + X cibles), écran « Mon tirage » + animation de découverte.
+5. La bande, fiches, idées (règles de visibilité), Ma fiche (pronom, ses goûts).
+6. Fin de vie (TTL, page « C'est fini », « Tout supprimer »).
+7. Tests vitest + `npm run build` sans erreur, vérification visuelle mobile (Playwright, 390 px).
+8. `DEPLOY.md` : étapes manuelles pour l'admin (créer le projet Vercel, brancher Upstash, variables `ADMIN_INSTA` et `SESSION_SECRET`, domaine `1kdo.gaston.monster` chez le registrar), puis test avec de faux comptes.
+
+## Ce que l'admin fera elle-même à la fin
+
+- Créer le projet Vercel et brancher Upstash, renseigner les variables d'environnement, ajouter le domaine.
+- Saisir son vrai événement et ses participants dans le QG (jamais dans le code).
 
 ## Régénérer les maquettes
 
