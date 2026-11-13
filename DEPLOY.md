@@ -6,7 +6,7 @@
 
 1. Sur vercel.com : **Add New → Project**, importer le dépôt GitHub `1kdo`.
 2. Framework : **Vite** (détecté automatiquement, `vercel.json` le précise). Ne rien changer aux commandes.
-3. Node.js : 24 (lu depuis `package.json`).
+3. Node.js : 26 (lu depuis `package.json`).
 
 ## 2. Brancher Upstash Redis
 

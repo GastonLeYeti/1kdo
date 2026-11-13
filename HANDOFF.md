@@ -78,7 +78,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 | Animations | Respecter `prefers-reduced-motion`. |
 | Stockage en local | Adaptateur mémoire quand les variables Upstash sont absentes (dev + tests). |
 | Données d'exemple | Uniquement des prénoms et @ fictifs (repo public). |
-| Node | Node 24 (`.nvmrc`, `engines`), la version la plus récente disponible en local et chez Vercel. |
+| Node | Node 26 (`.nvmrc`, `engines`), comme le projet Vercel. |
 | Première inscription | Elle exige le code d'invitation de l'événement (dans le lien perso). Sans lien : écran « Ouvre ton lien perso ». Un mauvais code d'invitation compte comme un essai raté. |
 | Première inscription de l'admin | Lien `/?i={ADMIN_INVITE}&u={ADMIN_INSTA}` : variable `ADMIN_INVITE` pour qu'on ne puisse pas prendre le @ de l'admin avant elle. |
 | Sessions | Le cookie porte une version du code : changer de code ou une réinitialisation par l'admin déconnecte les anciennes sessions. |

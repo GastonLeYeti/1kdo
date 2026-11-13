@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Un kdo pour qui ? Gift-chain web app (Secret Santa and friends).",
   "engines": {
-    "node": "24.x"
+    "node": "26.x"
   },
   "scripts": {
     "dev": "vite",

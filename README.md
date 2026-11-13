@@ -9,7 +9,7 @@ Chacun découvre à qui il offre, la bande remplit des post-its d'idées sur la 
 
 ## Lancer en local
 
-Node 24 (`nvm use`).
+Node 26 (`nvm use`).
 
 ```bash
 npm install
