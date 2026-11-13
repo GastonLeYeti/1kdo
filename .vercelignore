@@ -1,0 +1,7 @@
+.claude
+CLAUDE.md
+design
+.env*
+!.env.example
+node_modules
+dist
