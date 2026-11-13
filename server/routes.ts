@@ -1,11 +1,12 @@
 import { PRONOUNS, type Pronoun } from '../shared/themes.js';
-import type { SessionInfo } from '../shared/types.js';
+import type { EventStatus, SessionInfo } from '../shared/types.js';
 import { changeCode, checkHandle, login, register, requireCode, requireHandle, resetCode } from './auth.js';
 import type { AccountRecord, Db } from './db.js';
 import {
   addParticipant, createEvent, deleteEvent, launchDraw, listAllEvents, myDraw, parseEventInput,
   removeParticipant, requireEvent, requireVisibleEvent, toAdminEvent, toEventInfo, toSummary, updateEvent,
 } from './events.js';
+import { adminHandle } from './config.js';
 import { cleanText } from './handles.js';
 import { bodyFields, HttpError, ok, type ApiRequest, type ApiResponse } from './http.js';
 import { personSheet, saveIdea } from './ideas.js';
@@ -73,13 +74,15 @@ function handleParam(ctx: RouteContext): string {
 /** Who is signed in and which events they can open. */
 async function getSession(ctx: RouteContext): Promise<ApiResponse> {
   const account = await currentAccount(ctx);
-  if (!account) return ok({ user: null, events: [] } satisfies SessionInfo);
+  const bossPronoun = (await ctx.db.getAccount(adminHandle()))?.pronoun ?? null;
+  if (!account) return ok({ user: null, events: [], bossPronoun } satisfies SessionInfo);
   const admin = isAdmin(account.handle);
   const ownEvents = await liveEventsOf(ctx.db, account.handle);
   const events = admin ? await listAllEvents(ctx.db) : ownEvents;
   const info: SessionInfo = {
     user: { handle: account.handle, name: displayName(account.handle, ownEvents), isAdmin: admin, pronoun: account.pronoun },
     events: events.map(toSummary).sort((a, b) => a.date.localeCompare(b.date)),
+    bossPronoun,
   };
   return ok(info);
 }
@@ -123,10 +126,11 @@ async function patchMe(ctx: RouteContext): Promise<ApiResponse> {
 
 // ------------------------------------------------------------------ participant views
 
-/** Public: whether an event is still open, so a closed link shows "C'est fini" (nothing else leaks). */
+/** Public: whether an event is still open, with its title and theme to dress the sign-in page. */
 async function getEventStatus(ctx: RouteContext): Promise<ApiResponse> {
   const event = await ctx.db.getEvent(ctx.params.id ?? '');
-  return ok({ isOpen: event !== null && !isClosed(event.date) });
+  if (!event || isClosed(event.date)) return ok({ isOpen: false } satisfies EventStatus);
+  return ok({ isOpen: true, title: event.title, theme: event.theme } satisfies EventStatus);
 }
 
 async function getEvent(ctx: RouteContext): Promise<ApiResponse> {

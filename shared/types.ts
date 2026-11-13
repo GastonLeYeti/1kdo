@@ -1,5 +1,5 @@
 // Shapes exchanged between the API and the web app.
-import type { Pronoun, ThemeId } from './themes';
+import type { Pronoun, ThemeId } from './themes.js';
 
 export const CODE_LENGTH = 6;
 export const MAX_IDEA_LENGTH = 280;
@@ -37,6 +37,8 @@ export interface EventSummary {
 export interface SessionInfo {
   user: SessionUser | null;
   events: EventSummary[];
+  /** Pronoun of the admin, to write her title right ("la Mère Noël Supérieure"). */
+  bossPronoun: Pronoun | null;
 }
 
 /** An event as one of its participants sees it. */
@@ -95,6 +97,9 @@ export interface EventInput {
   budget: string;
   giftsPerPerson: number;
 }
+
+/** Public status of an event link. */
+export type EventStatus = { isOpen: false } | { isOpen: true; title: string; theme: ThemeId };
 
 /** Where a handle stands before signing in. */
 export type AuthState =

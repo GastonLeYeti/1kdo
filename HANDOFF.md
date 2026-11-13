@@ -78,6 +78,23 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 | Animations | Respecter `prefers-reduced-motion`. |
 | Stockage en local | Adaptateur mémoire quand les variables Upstash sont absentes (dev + tests). |
 | Données d'exemple | Uniquement des prénoms et @ fictifs (repo public). |
+| Node | Node 24 (`.nvmrc`, `engines`), la version la plus récente disponible en local et chez Vercel. |
+| Première inscription | Elle exige le code d'invitation de l'événement (dans le lien perso). Sans lien : écran « Ouvre ton lien perso ». Un mauvais code d'invitation compte comme un essai raté. |
+| Première inscription de l'admin | Lien `/?i={ADMIN_INVITE}&u={ADMIN_INSTA}` : variable `ADMIN_INVITE` pour qu'on ne puisse pas prendre le @ de l'admin avant elle. |
+| Sessions | Le cookie porte une version du code : changer de code ou une réinitialisation par l'admin déconnecte les anciennes sessions. |
+| Titre de l'admin | S'accorde avec le pronom choisi par l'admin dans « Ma fiche » (« iel » tant qu'elle n'a rien choisi). |
+| Idées | Une seule idée par auteur et par fiche (modifiable, effaçable). Les idées des autres sont triées par ordre alphabétique pour que leur ordre ne trahisse pas l'auteur. Ce que la personne écrit sur sa propre fiche apparaît à part (« ❤️ Sam aime : »). |
+| Admin non participante | Elle peut ouvrir tous les événements (La bande, QG) mais n'a ni tirage ni post-it si elle n'est pas dans la liste. |
+| Masquer | Après la première découverte, le nom est masqué par défaut à chaque visite (« Revoir le nom 👀 »), sans rejouer l'animation. |
+| Après le tirage | La liste, le nombre de cadeaux sont figés ; titre, thème, date, heure, lieu et budget restent modifiables. Le lien 🔗 reste disponible pour les personnes pas encore inscrites. |
+| Retrait d'un participant | Avant le tirage seulement ; ses idées (écrites par lui et sur lui) sont supprimées. |
+| Fermeture | À 00:00 UTC du jour J+3 (ex. événement le 20/12 → fermé le 23/12). Une route publique `/api/events/:id/status` permet d'afficher « C'est fini » même déconnecté. |
+| Neige du bandeau | Seulement pour le thème Noël. |
+| Écriture concurrente | Les enregistrements sont des documents JSON lus puis réécrits ; suffisant pour 10 à 12 personnes. |
+
+## État (13/11/2026)
+
+Les étapes 1 à 8 du plan sont faites : app complète, 20 tests verts, `npm run build` sans erreur, écrans vérifiés à 360 et 390 px (aucun défilement horizontal), build de production testé avec la CSP stricte. Reste à faire à la main : `DEPLOY.md`.
 
 ## Plan d'exécution
 

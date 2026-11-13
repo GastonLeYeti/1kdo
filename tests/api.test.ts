@@ -158,7 +158,7 @@ describe('end of life', () => {
     const alpha = await signUp('alpha.fictif', inviteCode);
     vi.setSystemTime(new Date('2099-12-22T23:00:00Z'));
     expect((await call('GET', `/api/events/${eventId}`, undefined, alpha)).status).toBe(200);
-    expect((await call('GET', `/api/events/${eventId}/status`)).body).toEqual({ isOpen: true });
+    expect((await call('GET', `/api/events/${eventId}/status`)).body).toEqual({ isOpen: true, title: 'Secret Santa test', theme: 'noel' });
     vi.setSystemTime(new Date('2099-12-23T00:00:01Z'));
     expect((await call('GET', `/api/events/${eventId}/status`)).body).toEqual({ isOpen: false });
     expect((await call('GET', `/api/events/${eventId}`, undefined, alpha)).status).toBe(401);
