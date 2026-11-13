@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 export type Route =
   | { page: 'home' }
   | { page: 'qg' }
+  | { page: 'moi' }
   | { page: 'event'; eventId: string; tab: EventTab; handle?: string };
 
 export type EventTab = 'tirage' | 'bande' | 'person' | 'fiche' | 'qg';
@@ -12,6 +13,7 @@ export type EventTab = 'tirage' | 'bande' | 'person' | 'fiche' | 'qg';
 export function parseRoute(pathname: string): Route {
   const parts = pathname.split('/').filter(Boolean).map(decodeURIComponent);
   if (parts[0] === 'qg' && parts.length === 1) return { page: 'qg' };
+  if (parts[0] === 'moi' && parts.length === 1) return { page: 'moi' };
   if (parts[0] !== 'e' || !parts[1]) return { page: 'home' };
   const eventId = parts[1];
   if (parts[2] === 'p' && parts[3]) return { page: 'event', eventId, tab: 'person', handle: parts[3] };

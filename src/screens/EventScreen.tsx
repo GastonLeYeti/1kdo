@@ -41,14 +41,15 @@ export function EventScreen({ eventId }: { eventId: string }) {
   if (!event || !user || route.page !== 'event') return <Loading />;
   const context: EventContext = { event, reloadEvent };
   const tab = route.tab === 'qg' && !user.isAdmin ? 'tirage' : route.tab;
+  const theme = getTheme(event.theme);
   return (
-    <>
+    <div className="shell">
       {tab === 'tirage' && <DrawTab {...context} />}
       {tab === 'bande' && <BandTab {...context} />}
       {tab === 'person' && <PersonSheetScreen {...context} handle={route.handle ?? ''} />}
       {tab === 'fiche' && <MySheet {...context} />}
       {tab === 'qg' && <QgEvent {...context} />}
-      <TabBar eventId={event.id} active={tab} isAdmin={user.isAdmin} />
-    </>
+      <TabBar eventId={event.id} active={tab} isAdmin={user.isAdmin} title={event.title} emoji={theme.emoji} me={user} />
+    </div>
   );
 }

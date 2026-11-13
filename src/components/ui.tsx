@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Theme } from '../../shared/themes';
 import { eventDate, shortDate, timeLeft } from '../lib/format';
+import { Identicon } from './Identicon';
 import { eventPath, navigate, type EventTab } from '../lib/router';
 
 /** Coloured header band with the theme's glyphs and a light snowfall. */
@@ -108,12 +109,24 @@ const TABS: Array<[EventTab, string, string]> = [
   ['qg', '👑', 'QG'],
 ];
 
-/** Bottom navigation of an event; the QG tab only exists for the admin. */
-export function TabBar({ eventId, active, isAdmin }: { eventId: string; active: EventTab; isAdmin: boolean }) {
+/** Navigation of an event: a bottom tab bar on phones, a sidebar on large screens. QG is admin-only. */
+export function TabBar({ eventId, active, isAdmin, title, emoji, me }: {
+  eventId: string;
+  active: EventTab;
+  isAdmin: boolean;
+  title: string;
+  emoji: string;
+  me: { handle: string; name: string };
+}) {
   const tabs = TABS.filter(([tab]) => tab !== 'qg' || isAdmin);
   const current = active === 'person' ? 'bande' : active;
   return (
     <nav className="tabs" aria-label="Navigation">
+      <button type="button" className="side-only brand" onClick={() => navigate('/')}>
+        <span className="brand-mark" aria-hidden="true">🎁</span>
+        <span>Un kdo pour qui ?</span>
+      </button>
+      <div className="side-only side-event"><span aria-hidden="true">{emoji}</span> {title}</div>
       {tabs.map(([tab, icon, label]) => (
         <button key={tab} type="button" className={`tab${tab === current ? ' on' : ''}`} aria-current={tab === current ? 'page' : undefined}
           onClick={() => navigate(eventPath(eventId, tab))}>
@@ -121,6 +134,7 @@ export function TabBar({ eventId, active, isAdmin }: { eventId: string; active: 
           <span>{label}</span>
         </button>
       ))}
+      <div className="side-only side-foot"><MeChip handle={me.handle} name={me.name} /></div>
     </nav>
   );
 }
@@ -163,4 +177,18 @@ export function useToast(): [string | null, (message: string) => void] {
 /** Full-page spinner text while data loads. */
 export function Loading() {
   return <div className="loading" aria-busy="true">Chargement…</div>;
+}
+
+/** The signed-in person's avatar, name and @, opening their profile. */
+export function MeChip({ handle, name, greeting, onClick }: { handle: string; name: string; greeting?: string; onClick?: () => void }) {
+  return (
+    <button type="button" className="hello mechip" onClick={onClick ?? (() => navigate('/moi'))} aria-label="Mon profil">
+      <Identicon handle={handle} size={40} />
+      <span className="mechip-text">
+        <b>{greeting ? `${greeting} ${name}` : name === handle ? `@${handle}` : name}</b>
+        <span>{name === handle ? 'Mon profil' : `@${handle}`}</span>
+      </span>
+      <span className="mechip-go" aria-hidden="true">›</span>
+    </button>
+  );
 }

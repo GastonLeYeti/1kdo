@@ -27,8 +27,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: none; }
 button:disabled { cursor: not-allowed; }
 :focus-visible { outline: 3px solid var(--strong); outline-offset: 2px; }
-#root { max-width: 480px; margin: 0 auto; min-height: 100dvh; border-inline: 2px solid transparent; }
-@media (min-width: 482px) { #root { border-color: var(--ink); } }
+#root { max-width: 480px; margin: 0 auto; min-height: 100dvh; border-inline: 2px solid transparent; background: var(--bg); }
+@media (min-width: 482px) and (max-width: 959px) { #root { border-color: var(--ink); } }
 
 .screen { position: relative; min-height: 100dvh; padding-bottom: 28px; }
 .screen.with-tabs { padding-bottom: calc(var(--tabs-h) + 28px + env(safe-area-inset-bottom)); }
@@ -132,7 +132,12 @@ input.input:disabled { opacity: .6; }
 .hello { display: flex; align-items: center; gap: 10px; }
 .hello b { display: block; font-family: var(--title); font-size: 20px; }
 .hello span { font-size: 13px; color: var(--muted); }
-.hello.end { justify-content: space-between; }
+.mechip { width: 100%; text-align: left; padding: 8px 12px 8px 8px; border: 2px solid var(--ink); border-radius: 16px; background: #fff; }
+.mechip:hover, .mechip:focus-visible { background: var(--b3); }
+.mechip-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mechip-text span { overflow: hidden; text-overflow: ellipsis; }
+.mechip-go { font-family: var(--title); font-size: 24px; font-weight: 700; color: var(--muted); }
+.small-name { font-size: 30px; }
 .gift { position: relative; width: 240px; height: 150px; margin: 0 auto; }
 .gbox, .glid { position: absolute; border: 2px solid var(--ink); border-radius: 8px; background: var(--head); }
 .gbox { left: 30px; top: 62px; width: 110px; height: 84px; }
@@ -179,6 +184,7 @@ input.input:disabled { opacity: .6; }
   border-radius: 14px; border: 2px solid transparent; }
 .tab .ti { font-size: 20px; }
 .tab.on { background: var(--cta); border-color: var(--ink); }
+.side-only { display: none; }
 
 /* ---------------------------------------------------------------- la bande */
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 14px; }
@@ -251,6 +257,51 @@ input.input:disabled { opacity: .6; }
 .warn li { margin-bottom: 8px; }
 .toast { position: fixed; left: 50%; bottom: calc(var(--tabs-h) + 20px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20; max-width: calc(100% - 32px);
   background: var(--ink); color: var(--bg); font-weight: 700; font-size: 14px; padding: 10px 16px; border-radius: 999px; animation: pop .3s both; }
+
+/* ---------------------------------------------------------------- large screens
+   A pop card centred on a dotted ground; events get a sidebar instead of the bottom bar. */
+@media (min-width: 960px) {
+  :root { --gutter: 32px; }
+  body { background: radial-gradient(color-mix(in srgb, var(--ink) 22%, transparent) 1.3px, transparent 1.5px) 0 0 / 24px 24px, var(--bg); }
+  #root { max-width: 620px; min-height: 0; margin: 48px auto; border: 2px solid var(--ink); border-radius: 32px; overflow: clip; box-shadow: 12px 12px 0 var(--ink); }
+  #root:has(.shell) { max-width: 1160px; }
+  .screen, .screen.with-tabs { min-height: 560px; padding-bottom: 48px; }
+  .shell .screen.with-tabs { min-height: calc(100dvh - 96px); }
+  .loading { min-height: calc(100dvh - 96px); }
+  .hd { padding: 36px 120px 26px 36px; min-height: 150px; }
+  .hd .ht { font-size: 42px; }
+  .hd.big .ht { font-size: 56px; }
+  .g1 { right: 40px; top: 30px; font-size: 34px; } .g2 { right: 84px; top: 62px; } .g3 { right: 44px; top: 98px; }
+  .hd .g { font-size: 34px; } .hd .g.s { font-size: 22px; }
+  .strip { padding: 10px 36px; font-size: 14px; }
+  .pad { padding-top: 28px; gap: 18px; }
+  .btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--ink); }
+  .btn.sm:hover:not(:disabled) { box-shadow: 4px 4px 0 var(--ink); }
+  .evcard:hover, .pcard:hover { transform: translate(-2px, -2px) rotate(-.6deg); box-shadow: 5px 5px 0 var(--ink); }
+  .pcard.low:hover { transform: translate(-2px, 12px) rotate(.6deg); }
+  .evcard, .pcard { transition: transform .12s, box-shadow .12s; }
+  .modal { max-width: 520px; }
+  .toast { bottom: 40px; }
+
+  /* events: sidebar + content */
+  .shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: start; }
+  .shell > main { grid-column: 2; grid-row: 1; border-left: 2px solid var(--ink); }
+  .shell > .pad, .shell > main > .pad { max-width: 820px; }
+  .shell .tabs { grid-column: 1; grid-row: 1; position: sticky; top: 0; left: auto; bottom: auto; transform: none; width: auto; max-width: none;
+    height: calc(100dvh - 96px); flex-direction: column; gap: 8px; padding: 28px 18px; border-top: none; background: var(--bg); }
+  .shell .tab { flex: none; flex-direction: row; justify-content: flex-start; gap: 12px; min-height: 52px; padding: 0 16px; font-size: 16px; }
+  .shell .tab:hover:not(.on) { border-color: var(--ink); background: #fff; }
+  .shell .tab .ti { font-size: 22px; }
+  .side-only { display: block; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--title); font-weight: 700; font-size: 20px; line-height: 1.1; text-align: left; margin-bottom: 4px; }
+  .brand-mark { display: grid; place-items: center; width: 44px; height: 44px; flex: none; font-size: 24px; background: var(--head); border: 2px solid var(--ink);
+    border-radius: 12px; box-shadow: 3px 3px 0 var(--ink); transform: rotate(-4deg); }
+  .side-event { font-weight: 700; font-size: 14px; padding: 8px 12px; margin: 6px 0 14px; background: var(--b3); border: 2px solid var(--ink); border-radius: 12px; overflow-wrap: anywhere; }
+  .side-foot { margin-top: auto; }
+  .side-foot .mechip { padding: 8px; }
+  .screen.with-tabs .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .names { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

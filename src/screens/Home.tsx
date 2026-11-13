@@ -1,16 +1,14 @@
 import { useEffect } from 'react';
 import { getTheme, DEFAULT_THEME_ID } from '../../shared/themes';
-import { Identicon } from '../components/Identicon';
-import { Block, Button, Header } from '../components/ui';
+import { Block, Button, Header, MeChip } from '../components/ui';
 import { shortDate } from '../lib/format';
 import { eventPath, navigate } from '../lib/router';
 import { useTheme } from '../lib/theme';
 import { useSession } from '../session';
-import { logout } from '../lib/logout';
 
 /** "Mes événements": the signed-in person's events (one event opens directly). */
 export function Home() {
-  const { session, reload } = useSession();
+  const { session } = useSession();
   const theme = getTheme(DEFAULT_THEME_ID);
   useTheme(theme);
   const user = session?.user;
@@ -24,6 +22,7 @@ export function Home() {
     <main className="screen">
       <Header title="Mes événements" sub={user.name === user.handle ? `@${user.handle}` : `${user.name} · @${user.handle}`} theme={theme} />
       <div className="pad">
+        <MeChip handle={user.handle} name={user.name} />
         {events.length === 0 && (
           <Block color="b3"><p className="lead">Aucun événement pour l'instant {theme.glyphs[0]}</p></Block>
         )}
@@ -39,9 +38,6 @@ export function Home() {
           })}
         </div>
         {user.isAdmin && <Button kind="head" onClick={() => navigate('/qg')}>👑 Aller au QG</Button>}
-        <div className="hello end"><Identicon handle={user.handle} size={32} />
-          <button type="button" className="link" onClick={() => void logout(reload)}>🚪 Me déconnecter</button>
-        </div>
       </div>
     </main>
   );

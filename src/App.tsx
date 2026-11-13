@@ -8,6 +8,7 @@ import { Closed } from './screens/Closed';
 import { EventScreen } from './screens/EventScreen';
 import { Home } from './screens/Home';
 import { Login } from './screens/Login';
+import { Profile } from './screens/Profile';
 import { QgHome } from './screens/QgHome';
 import { useSession } from './session';
 
@@ -25,6 +26,7 @@ export function App() {
       bossPronoun={session.bossPronoun} onSignedIn={() => void reload()} />;
   }
   if (route.page === 'qg' && session.user.isAdmin) return <QgHome />;
+  if (route.page === 'moi') return <Profile />;
   return <Home />;
 }
 

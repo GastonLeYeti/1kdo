@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { bossTitle, capitalize, DEFAULT_THEME_ID, getTheme } from '../../shared/themes';
 import type { AdminEvent, EventInput, EventSummary } from '../../shared/types';
 import { blankEvent, EventForm } from '../components/EventForm';
-import { Block, Button, ErrorLine, Header, Loading } from '../components/ui';
+import { Block, Button, ErrorLine, Header, Loading, MeChip } from '../components/ui';
 import { api, errorMessage } from '../lib/api';
 import { shortDate } from '../lib/format';
 import { eventPath, navigate } from '../lib/router';
@@ -34,6 +34,7 @@ export function QgHome() {
     <main className="screen">
       <Header title="Le QG 👑" sub={`Réservé à ${bossTitle(theme, session?.user?.pronoun)}`} theme={theme} />
       <div className="pad">
+        {session?.user && <MeChip handle={session.user.handle} name={session.user.name} />}
         {events.length === 0 && <Block color="b3"><p className="lead">Aucun événement. Crée le premier !</p></Block>}
         <div className="list">
           {events.map((event, index) => {

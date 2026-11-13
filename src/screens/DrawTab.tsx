@@ -3,7 +3,7 @@ import { bossTitle, capitalize, getTheme, giverTitle, type Theme } from '../../s
 import type { EventInfo, MyDraw, Person } from '../../shared/types';
 import { Confetti, Gift } from '../components/Gift';
 import { Identicon } from '../components/Identicon';
-import { Block, Button, Countdown, ErrorLine, Header, InfoStrip, Loading } from '../components/ui';
+import { Block, Button, Countdown, ErrorLine, Header, InfoStrip, Loading, MeChip } from '../components/ui';
 import { api, errorMessage } from '../lib/api';
 import { eventPath, navigate } from '../lib/router';
 import { useSession } from '../session';
@@ -56,10 +56,7 @@ export function DrawTab({ event }: EventContext) {
       <Header title="Mon tirage" theme={theme} />
       <InfoStrip date={event.date} place={event.place} budget={event.budget} />
       <div className="pad">
-        <div className="hello">
-          <Identicon handle={user.handle} size={40} />
-          <div><b>Salut {user.name}</b><span>@{user.handle}</span></div>
-        </div>
+        <MeChip handle={user.handle} name={user.name} greeting="Salut" onClick={() => navigate(eventPath(event.id, 'fiche'))} />
         {!isParticipant ? (
           <Block color="b3"><p className="lead">Tu ne participes pas à cet événement : tu le gères depuis le QG 👑</p></Block>
         ) : !draw.isDrawn ? (
