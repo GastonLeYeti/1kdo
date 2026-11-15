@@ -48,7 +48,7 @@ Puis **Deployments → Redeploy** pour qu'elles soient prises en compte. Sans ce
 
 ## 7. Le vrai événement
 
-Créer l'événement dans le QG, ajouter les participants, envoyer à chacun son lien perso 🔗 en DM Instagram. Le tirage se lance quand tout le monde est prêt (ceux qui s'inscrivent après découvrent leur nom à l'inscription).
+Créer l'événement dans le QG, ajouter les participants, coller le lien de groupe dans la conversation (ou envoyer à chacun son lien perso 🔗 en DM). Le tirage se lance quand tout le monde est prêt (ceux qui s'inscrivent après découvrent leur nom à l'inscription).
 
 ## Fin de vie
 

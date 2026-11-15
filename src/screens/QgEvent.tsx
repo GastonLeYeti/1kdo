@@ -12,9 +12,10 @@ import type { EventContext } from './EventScreen';
 
 const VISIBLE_ROWS = 6;
 
-/** The personal link of a participant: event, invitation code and pre-filled @. */
-function personalLink(event: AdminEvent, handle: string): string {
-  const params = new URLSearchParams({ i: event.inviteCode, u: handle });
+/** The invitation link of an event; with a handle, the personal link that pre-fills the @. */
+function inviteLink(event: AdminEvent, handle?: string): string {
+  const params = new URLSearchParams({ i: event.inviteCode });
+  if (handle) params.set('u', handle);
   return `${location.origin}/e/${event.id}?${params.toString()}`;
 }
 
@@ -45,13 +46,13 @@ export function QgEvent({ event: info, reloadEvent }: EventContext) {
     }
   }, [info.id, reloadEvent, showToast]);
 
-  /** Copies a personal link, or shows it when the clipboard is unavailable. */
-  async function copyLink(handle: string): Promise<void> {
+  /** Copies an invitation link (the group one without a handle), or shows it when the clipboard is unavailable. */
+  async function copyLink(handle?: string): Promise<void> {
     if (!event) return;
-    const link = personalLink(event, handle);
+    const link = inviteLink(event, handle);
     try {
       await navigator.clipboard.writeText(link);
-      showToast('Lien perso copié 🔗');
+      showToast(handle ? 'Lien perso copié 🔗' : 'Lien de groupe copié 🔗');
     } catch {
       setDialog({ link });
     }
@@ -77,6 +78,7 @@ export function QgEvent({ event: info, reloadEvent }: EventContext) {
         ) : (
           <AddParticipant onAdd={(name, handle) => act('POST', '/participants', { name, handle }, `${name} est dans la liste ✓`)} />
         )}
+        <GroupLink onCopy={() => void copyLink()} />
         <ParticipantList event={event} onCopy={(handle) => void copyLink(handle)}
           onRemove={(handle) => void act('DELETE', `/participants/${encodeURIComponent(handle)}`)}
           onReset={(handle) => void act('POST', `/participants/${encodeURIComponent(handle)}/reset-code`, {}, 'Code réinitialisé : envoie-lui son lien perso 🔗')} />
@@ -96,9 +98,9 @@ export function QgEvent({ event: info, reloadEvent }: EventContext) {
       )}
       {dialog === 'delete' && <DeleteDialog title={event.title} onClose={() => setDialog(null)} onConfirm={deleteAll} />}
       {dialog && typeof dialog === 'object' && (
-        <Modal title="🔗 Lien perso" onClose={() => setDialog(null)}>
+        <Modal title="🔗 Lien d'invitation" onClose={() => setDialog(null)}>
           <p className="small">Copie ce lien et envoie-le en message :</p>
-          <input className="input sm" readOnly value={dialog.link} onFocus={(e) => e.target.select()} aria-label="Lien perso" />
+          <input className="input sm" readOnly value={dialog.link} onFocus={(e) => e.target.select()} aria-label="Lien d'invitation" />
           <Button kind="white" small onClick={() => setDialog(null)}>Fermer</Button>
         </Modal>
       )}
@@ -141,6 +143,17 @@ function AddParticipant({ onAdd }: { onAdd: (name: string, handle: string) => Pr
         </div>
         <Button kind="strong" small type="submit">Ajouter</Button>
       </form>
+    </Block>
+  );
+}
+
+/** One link for the whole group chat: everyone types their own @. */
+function GroupLink({ onCopy }: { onCopy: () => void }) {
+  return (
+    <Block color="b2">
+      <span className="label">Lien de groupe</span>
+      <p className="small">Un seul lien pour tout le monde, à coller dans le groupe : chacun·e tape son @ et choisit son code.</p>
+      <Button kind="strong" small onClick={onCopy}>🔗 Copier le lien de groupe</Button>
     </Block>
   );
 }

@@ -107,11 +107,11 @@ function NotListedStep({ theme, boss, handle, onRetry }: { theme: Theme; boss: s
 function NeedsInviteStep({ theme, boss, handle, onRetry }: { theme: Theme; boss: string; handle: string; onRetry: () => void }) {
   return (
     <main className="screen">
-      <Header title="Ton lien perso" theme={theme} />
+      <Header title="Ton lien d'invitation" theme={theme} />
       <div className="pad">
         <div className="bigemoji" aria-hidden="true">🔗</div>
         <Block color="b3">
-          <p className="lead">Pour ta première connexion, <b>@{handle}</b>, ouvre le lien perso reçu en message.</p>
+          <p className="lead">Pour ta première connexion, <b>@{handle}</b>, ouvre le lien d'invitation reçu en message.</p>
         </Block>
         <Block offset={2}>
           <p className="small">Tu ne le retrouves pas ? Demande-le à <b>{boss}</b>.</p>
