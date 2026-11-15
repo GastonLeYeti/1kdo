@@ -70,6 +70,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 | Compte | Un compte par @insta, **commun à tous les événements** (même code partout). Si la personne est dans plusieurs événements : écran « Mes événements » après connexion. |
 | Admin | Identifiée par la variable d'environnement `ADMIN_INSTA` (son @). Elle se connecte comme tout le monde (@ + code). Seule elle voit le QG et peut créer des événements. |
 | QG | Liste des événements + « Créer un événement » (titre, thème, date, lieu, budget, X cadeaux). Dans un événement : participants, liens perso, lancer le tirage, réglages, suppression. |
+| Lieu | Dans le bandeau 📍, le lieu est un lien : Plans sur iPhone/iPad/Mac, Google Maps ailleurs (nouvel onglet). |
 | Lien de groupe | `/e/{eventId}?i={codeInvitation}` : un code d'invitation par événement, le même lien pour tous. Seuls les @ de la liste peuvent s'inscrire. |
 | Lien perso | `/e/{eventId}?i={codeInvitation}&u={handle}` : le même, avec le @ pré-rempli. Le code à 6 chiffres reste demandé. |
 | Sans pronom choisi | Formule « iel » du thème par défaut (ex. « l'Esprit de Noël »). |

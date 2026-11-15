@@ -3,6 +3,7 @@ import type { Theme } from '../../shared/themes';
 import { eventDate, shortDate, timeLeft } from '../lib/format';
 import { Identicon } from './Identicon';
 import { eventPath, navigate, type EventTab } from '../lib/router';
+import { mapsUrl } from '../lib/maps';
 
 /** Coloured header band with the theme's glyphs and a light snowfall. */
 export function Header({ title, sub, theme, big = false, strong = false, onSubClick }: {
@@ -67,7 +68,10 @@ export function InfoStrip({ date, place, budget }: { date: string; place: string
   return (
     <div className="strip">
       <span>📅 {shortDate(date)}</span>
-      {place && <span>📍 {place}</span>}
+      {place && (
+        <a className="strip-link" href={mapsUrl(place, navigator.userAgent)} target="_blank" rel="noopener noreferrer"
+          aria-label={`Ouvrir ${place} dans une app de cartes`}>📍 {place}</a>
+      )}
       {budget && <span>💰 {budget}</span>}
     </div>
   );

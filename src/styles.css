@@ -57,6 +57,8 @@ button:disabled { cursor: not-allowed; }
 
 .strip { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; background: var(--cta); border-bottom: 2px solid var(--ink);
   padding: 8px var(--gutter); font-size: 13px; font-weight: 700; }
+.strip-link { color: inherit; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.strip-link:hover, .strip-link:focus-visible { text-decoration-style: wavy; }
 
 /* ---------------------------------------------------------------- blocks */
 .blk { position: relative; border: 2px solid var(--ink); border-radius: 20px; padding: 16px; background: #fff; animation: pop .35s cubic-bezier(.3, 1.6, .5, 1) both; }
