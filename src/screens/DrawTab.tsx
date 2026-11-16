@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { bossTitle, capitalize, getTheme, giverTitle, type Theme } from '../../shared/themes';
-import type { EventInfo, MyDraw, Person } from '../../shared/types';
+import type { ChatSummary, EventInfo, MyDraw, Person } from '../../shared/types';
 import { Confetti, Gift } from '../components/Gift';
 import { Identicon } from '../components/Identicon';
-import { Block, Button, Countdown, ErrorLine, Header, InfoStrip, Loading, MeChip } from '../components/ui';
+import { Block, Button, Countdown, ErrorLine, Header, InfoStrip, Loading, MeChip, UnreadBadge } from '../components/ui';
 import { api, errorMessage } from '../lib/api';
 import { eventPath, navigate } from '../lib/router';
 import { useSession } from '../session';
@@ -17,7 +17,7 @@ function prefersReducedMotion(): boolean {
 }
 
 /** "Mon tirage": waiting, to discover, or the revealed name(s). */
-export function DrawTab({ event }: EventContext) {
+export function DrawTab({ event, chats, reloadChats }: EventContext) {
   const { session } = useSession();
   const theme = getTheme(event.theme);
   const [draw, setDraw] = useState<MyDraw | null>(null);
@@ -36,6 +36,7 @@ export function DrawTab({ event }: EventContext) {
       const show = () => {
         setDraw(revealed);
         setPhase('shown');
+        void reloadChats();
       };
       if (draw?.isRevealed || prefersReducedMotion()) return show();
       setPhase('shaking');
@@ -48,9 +49,10 @@ export function DrawTab({ event }: EventContext) {
   const user = session?.user;
   if (!draw || !user) return error ? <ErrorLine message={error} /> : <Loading />;
   if (phase === 'shown' && draw.targets.length > 0) {
-    return <Revealed event={event} theme={theme} targets={draw.targets} giver={giverTitle(theme, user.pronoun)} onHide={() => setPhase('hidden')} />;
+    return <Revealed event={event} theme={theme} targets={draw.targets} giver={giverTitle(theme, user.pronoun)} chats={chats} onHide={() => setPhase('hidden')} />;
   }
   const isParticipant = event.people.some((p) => p.handle === user.handle);
+  const boss = bossTitle(theme, event.bossPronoun);
   return (
     <main className="screen with-tabs">
       <Header title="Mon tirage" theme={theme} />
@@ -60,11 +62,13 @@ export function DrawTab({ event }: EventContext) {
         {!isParticipant ? (
           <Block color="b3"><p className="lead">Tu ne participes pas à cet événement : tu le gères depuis le QG 👑</p></Block>
         ) : !draw.isDrawn ? (
-          <Waiting theme={theme} boss={bossTitle(theme, event.bossPronoun)} />
+          <Waiting theme={theme} boss={boss} />
         ) : (
           <ToDiscover draw={draw} shaking={phase === 'shaking'} onReveal={() => void reveal()} />
         )}
+        {isParticipant && event.drawVisibility === 'visible' && <p className="small c tight">👀 Tirage visible par {boss}</p>}
         <ErrorLine message={error} />
+        <ChatList eventId={event.id} chats={chats} />
         <Countdown date={event.date} time={event.time} />
       </div>
     </main>
@@ -105,12 +109,33 @@ function ToDiscover({ draw, shaking, onReveal }: { draw: MyDraw; shaking: boolea
   );
 }
 
+/** "💬 Messages": the threads with one's receivers, then the anonymous ones of one's givers. */
+function ChatList({ eventId, chats }: { eventId: string; chats: ChatSummary[] }) {
+  if (chats.length === 0) return null;
+  return (
+    <section className="list" aria-label="Messages">
+      <div className="lh">💬 Messages secrets</div>
+      {chats.map((chat, index) => (
+        <button key={chat.id} type="button" className={`evcard b${(index % 3) + 1}`} onClick={() => navigate(eventPath(eventId, 'chat', chat.id))}>
+          <span className="evemoji" aria-hidden="true">{chat.role === 'giver' ? '🎁' : '🤫'}</span>
+          <span className="evtext">
+            <b>{chat.role === 'giver' ? `Discuter avec ${chat.title}` : chat.title}</b>
+            <span className="small">{chat.role === 'giver' ? 'Ton nom reste secret' : 'Une personne qui t’offre un cadeau'}{chat.isMuted ? ' · ⏸️ en pause' : ''}</span>
+          </span>
+          <UnreadBadge count={chat.unread} />
+        </button>
+      ))}
+    </section>
+  );
+}
+
 /** Screen 07: "Tu es la Mère Noël de… Sam". */
-function Revealed({ event, theme, targets, giver, onHide }: {
+function Revealed({ event, theme, targets, giver, chats, onHide }: {
   event: EventInfo;
   theme: Theme;
   targets: Person[];
   giver: string;
+  chats: ChatSummary[];
   onHide: () => void;
 }) {
   const first = targets[0] as Person;
@@ -137,6 +162,14 @@ function Revealed({ event, theme, targets, giver, onHide }: {
           </Button>
           <Button kind="white" onClick={onHide}>🙈 Masquer</Button>
         </div>
+        {targets.map((target) => {
+          const chat = chats.find((c) => c.role === 'giver' && c.with?.handle === target.handle);
+          return chat && (
+            <Button key={target.handle} kind="strong" small onClick={() => navigate(eventPath(event.id, 'chat', chat.id))}>
+              💬 Discuter avec {target.name} en secret
+            </Button>
+          );
+        })}
         <p className="small c">Chut, c'est un secret 🤐</p>
       </div>
     </main>

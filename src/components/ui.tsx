@@ -113,17 +113,26 @@ const TABS: Array<[EventTab, string, string]> = [
   ['qg', '👑', 'QG'],
 ];
 
+/** The tab a page belongs to: a person's sheet is in "La bande", a chat in "Mon tirage". */
+function tabOf(active: EventTab): EventTab {
+  if (active === 'person') return 'bande';
+  if (active === 'chat') return 'tirage';
+  return active;
+}
+
 /** Navigation of an event: a bottom tab bar on phones, a sidebar on large screens. QG is admin-only. */
-export function TabBar({ eventId, active, isAdmin, title, emoji, me }: {
+export function TabBar({ eventId, active, isAdmin, title, emoji, me, badges = {} }: {
   eventId: string;
   active: EventTab;
   isAdmin: boolean;
   title: string;
   emoji: string;
   me: { handle: string; name: string };
+  /** Unread counts shown on tabs. */
+  badges?: Partial<Record<EventTab, number>>;
 }) {
   const tabs = TABS.filter(([tab]) => tab !== 'qg' || isAdmin);
-  const current = active === 'person' ? 'bande' : active;
+  const current = tabOf(active);
   return (
     <nav className="tabs" aria-label="Navigation">
       <button type="button" className="side-only brand" onClick={() => navigate('/')}>
@@ -136,11 +145,18 @@ export function TabBar({ eventId, active, isAdmin, title, emoji, me }: {
           onClick={() => navigate(eventPath(eventId, tab))}>
           <span className="ti" aria-hidden="true">{icon}</span>
           <span>{label}</span>
+          <UnreadBadge count={badges[tab] ?? 0} className="tbadge" />
         </button>
       ))}
       <div className="side-only side-foot"><MeChip handle={me.handle} name={me.name} /></div>
     </nav>
   );
+}
+
+/** A small red pill with a number of new messages; nothing when there are none. */
+export function UnreadBadge({ count, className = 'unread' }: { count: number; className?: string }) {
+  if (count <= 0) return null;
+  return <span className={className} aria-label={`${count} nouveau${count > 1 ? 'x' : ''} message${count > 1 ? 's' : ''}`}>{count > 9 ? '9+' : count}</span>;
 }
 
 /** A dimmed overlay with a centred dialog block. */

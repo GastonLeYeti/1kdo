@@ -36,3 +36,18 @@ export function timeLeft(target: Date, now = new Date()): { days: number; hours:
 export function plural(count: number, word: string, pluralForm = `${word}s`): string {
   return `${count} ${count > 1 ? pluralForm : word}`;
 }
+
+/** A local date as "YYYY-MM-DD". */
+function isoDay(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** The day of a chat message: "aujourd'hui", "hier" or "le 12/12" (never the hour). */
+export function chatDay(day: string, now = new Date()): string {
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  if (day === isoDay(now)) return 'aujourd’hui';
+  if (day === isoDay(yesterday)) return 'hier';
+  const [, month, date] = day.split('-');
+  return `le ${date}/${month}`;
+}

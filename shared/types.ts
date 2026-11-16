@@ -5,6 +5,11 @@ export const CODE_LENGTH = 6;
 export const MAX_IDEA_LENGTH = 280;
 export const MAX_TRIES = 5;
 export const LOCK_MINUTES = 15;
+export const MAX_MESSAGE_LENGTH = 500;
+
+/** "100 % anonyme" (nobody sees the draw) or "visible" (the admin sees and adjusts it). */
+export type DrawVisibility = 'anonymous' | 'visible';
+export const DRAW_VISIBILITIES: readonly DrawVisibility[] = ['anonymous', 'visible'];
 
 /** Someone of an event, as everybody sees them. */
 export interface Person {
@@ -46,7 +51,9 @@ export interface EventInfo extends EventSummary {
   place: string;
   budget: string;
   giftsPerPerson: number;
+  drawVisibility: DrawVisibility;
   closesOn: string;
+  /** True once names can be discovered: drawn, and the envelopes are open. */
   isDrawn: boolean;
   bossPronoun: Pronoun | null;
   people: PersonCard[];
@@ -84,7 +91,49 @@ export interface AdminParticipant extends Person {
 export interface AdminEvent extends Omit<EventInfo, 'people'> {
   inviteCode: string;
   drawnAt: string | null;
+  envelopesOpen: boolean;
   participants: AdminParticipant[];
+}
+
+/** One line of "Qui offre à qui" (visible mode only). */
+export interface DrawBoardRow {
+  giver: Person;
+  receivers: Person[];
+  /** The giver discovered their names: their receivers can no longer change. */
+  isLocked: boolean;
+}
+
+/** The whole draw, as the admin sees it in visible mode. */
+export interface DrawBoard {
+  rows: DrawBoardRow[];
+  /** Duos who give to each other (A → B and B → A): allowed, but flagged. */
+  reciprocalPairs: Array<[Person, Person]>;
+  envelopesOpen: boolean;
+}
+
+/** A chat thread between a giver and one of their receivers, as one side sees it. */
+export interface ChatSummary {
+  /** Opaque id: it never tells the receiver who the giver is. */
+  id: string;
+  role: 'giver' | 'receiver';
+  /** "Sam" for the giver; the theme's neutral title ("L'Esprit de Noël n°2") for the receiver. */
+  title: string;
+  /** The receiver, on the giver's side only. */
+  with: Person | null;
+  unread: number;
+  isMuted: boolean;
+}
+
+/** A message, dated by its day only ("YYYY-MM-DD", Paris time): never the hour. */
+export interface ChatMessage {
+  isMine: boolean;
+  text: string;
+  day: string;
+}
+
+export interface ChatThreadView {
+  thread: ChatSummary;
+  messages: ChatMessage[];
 }
 
 /** Fields the admin types when creating or editing an event. */
@@ -96,6 +145,7 @@ export interface EventInput {
   place: string;
   budget: string;
   giftsPerPerson: number;
+  drawVisibility: DrawVisibility;
 }
 
 /** Public status of an event link. */

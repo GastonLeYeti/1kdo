@@ -13,4 +13,10 @@ export interface KeyValueStore {
   del(...keys: string[]): Promise<void>;
   /** Increments a counter and returns its new value; a new counter expires after `ttlSeconds`. */
   incr(key: string, ttlSeconds: number): Promise<number>;
+  /** Appends a JSON value at the end of a list (atomically) and sets the list's expiry. */
+  push(key: string, value: unknown, options: Required<WriteOptions>): Promise<void>;
+  /** Reads a whole list, oldest first; empty when the key is missing or expired. */
+  list<T>(key: string): Promise<T[]>;
+  /** Moves the expiry of an existing key; missing keys are ignored. */
+  expire(key: string, expireAt: number): Promise<void>;
 }

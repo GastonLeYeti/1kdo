@@ -1,14 +1,14 @@
 import { useState, type FormEvent } from 'react';
 import { THEMES, type ThemeId } from '../../shared/themes';
-import type { EventInput } from '../../shared/types';
+import type { DrawVisibility, EventInput } from '../../shared/types';
 import { Button, ErrorLine } from './ui';
 
 /** An empty event, Christmas themed, one gift each. */
 export function blankEvent(): EventInput {
-  return { title: '', theme: 'noel', date: '', time: null, place: '', budget: '', giftsPerPerson: 1 };
+  return { title: '', theme: 'noel', date: '', time: null, place: '', budget: '', giftsPerPerson: 1, drawVisibility: 'anonymous' };
 }
 
-/** Form to create or edit an event; `isDrawn` locks the number of gifts. */
+/** Form to create or edit an event; `isDrawn` locks the number of gifts and the draw mode. */
 export function EventForm({ initial, submitLabel, isDrawn = false, onSubmit }: {
   initial: EventInput;
   submitLabel: string;
@@ -65,8 +65,31 @@ export function EventForm({ initial, submitLabel, isDrawn = false, onSubmit }: {
             onChange={(e) => set('giftsPerPerson', Number(e.target.value))} />
         </label>
       </div>
+      <DrawModePicker value={input.drawVisibility} isLocked={isDrawn} onChange={(mode) => set('drawVisibility', mode)} />
       <ErrorLine message={error} />
       <Button kind="strong" small type="submit" disabled={busy}>{submitLabel}</Button>
     </form>
+  );
+}
+
+const DRAW_MODES: Array<[DrawVisibility, string, string]> = [
+  ['anonymous', '🙈 100 % anonyme', 'Personne ne verra qui offre à qui, toi non plus.'],
+  ['visible', '👀 Visible par moi', 'Tu vois le tirage et tu peux échanger des personnes avant d’ouvrir les enveloppes. La bande saura que tu le vois.'],
+];
+
+/** "100 % anonyme" or "Tirage visible par l'admin"; frozen once the draw is made. */
+function DrawModePicker({ value, isLocked, onChange }: { value: DrawVisibility; isLocked: boolean; onChange: (mode: DrawVisibility) => void }) {
+  const hint = DRAW_MODES.find(([mode]) => mode === value)?.[2];
+  return (
+    <div className="field" role="group" aria-label="Tirage">
+      <span>🎲 Tirage</span>
+      <div className="seg">
+        {DRAW_MODES.map(([mode, label]) => (
+          <button key={mode} type="button" className={mode === value ? 'on' : ''} aria-pressed={mode === value}
+            disabled={isLocked} onClick={() => onChange(mode)}>{label}</button>
+        ))}
+      </div>
+      <span className="small">{isLocked ? `${hint} Le tirage est fait : le mode est figé.` : hint}</span>
+    </div>
   );
 }

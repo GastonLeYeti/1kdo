@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { bossTitle, getTheme } from '../../shared/themes';
 import type { AdminEvent, AdminParticipant, EventInput } from '../../shared/types';
+import { DrawBoardPanel } from '../components/DrawBoard';
 import { EventForm } from '../components/EventForm';
 import { Identicon } from '../components/Identicon';
 import { Block, Button, ErrorLine, Header, Loading, Modal, Toast, useToast } from '../components/ui';
@@ -68,13 +69,14 @@ export function QgEvent({ event: info, reloadEvent }: EventContext) {
   if (!event) return error ? <ErrorLine message={error} /> : <Loading />;
   const boss = bossTitle(theme, session?.user?.pronoun);
   const isDrawn = event.drawnAt !== null;
+  const isVisible = event.drawVisibility === 'visible';
   return (
     <main className="screen with-tabs">
       <Header title="Le QG 👑" sub={`Réservé à ${boss}`} theme={theme} />
       <div className="pad">
         <div className="qg-title"><b>{theme.emoji} {event.title}</b></div>
         {isDrawn ? (
-          <div className="locked">🔒 Tirage fait le {dayMonth(event.drawnAt as string)} · liste figée</div>
+          <div className="locked">🔒 Tirage fait le {dayMonth(event.drawnAt as string)} · liste figée{event.envelopesOpen ? '' : ' · enveloppes fermées'}</div>
         ) : (
           <AddParticipant onAdd={(name, handle) => act('POST', '/participants', { name, handle }, `${name} est dans la liste ✓`)} />
         )}
@@ -84,6 +86,10 @@ export function QgEvent({ event: info, reloadEvent }: EventContext) {
           onReset={(handle) => void act('POST', `/participants/${encodeURIComponent(handle)}/reset-code`, {}, 'Code réinitialisé : envoie-lui son lien perso 🔗')} />
         <ErrorLine message={error} />
         {!isDrawn && <Button kind="head" onClick={() => setDialog('draw')}>🎲 Lancer le tirage</Button>}
+        {isDrawn && isVisible && (
+          <DrawBoardPanel eventId={event.id} envelopesOpen={event.envelopesOpen} onToast={showToast}
+            onOpen={() => act('POST', '/envelopes', {}, 'Enveloppes ouvertes 🎁')} />
+        )}
         <Block color="b3" offset={1}>
           <span className="label">L'événement</span>
           <EventForm initial={toInput(event)} isDrawn={isDrawn} submitLabel="Enregistrer"
@@ -111,8 +117,8 @@ export function QgEvent({ event: info, reloadEvent }: EventContext) {
 
 /** The editable fields of an event. */
 function toInput(event: AdminEvent): EventInput {
-  const { title, theme, date, time, place, budget, giftsPerPerson } = event;
-  return { title, theme, date, time, place, budget, giftsPerPerson };
+  const { title, theme, date, time, place, budget, giftsPerPerson, drawVisibility } = event;
+  return { title, theme, date, time, place, budget, giftsPerPerson, drawVisibility };
 }
 
 /** "Ajouter un·e participant·e": first name + @. */
@@ -236,7 +242,11 @@ function DrawDialog({ event, onClose, onConfirm }: { event: AdminEvent; onClose:
           <li><b>{missing.join(', ')}</b> {missing.length > 1 ? 'ne sont pas encore inscrits. Ils découvriront leur nom' : "n'est pas encore inscrit·e. Son nom sera visible"} en s'inscrivant.</li>
         )}
         <li>La liste sera <b>figée</b> : plus d'ajout ni de retrait.</li>
-        <li>Toi non plus, tu ne sauras pas qui a tiré qui 🙈</li>
+        {event.drawVisibility === 'visible' ? (
+          <li>Les enveloppes restent <b>fermées</b> : tu vois qui offre à qui, tu peux échanger des personnes, puis tu ouvres les enveloppes 🎁</li>
+        ) : (
+          <li>Toi non plus, tu ne sauras pas qui a tiré qui 🙈</li>
+        )}
       </ul>
       <div className="row">
         <Button kind="white" small onClick={onClose}>Annuler</Button>

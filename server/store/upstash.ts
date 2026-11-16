@@ -18,8 +18,7 @@ export class UpstashStore implements KeyValueStore {
       await this.redis.set(key, value);
       return;
     }
-    // A date already in the past would make Redis refuse the write: keep it a second.
-    await this.redis.set(key, value, { pxat: Math.max(options.expireAt, Date.now() + 1000) });
+    await this.redis.set(key, value, { pxat: futureTime(options.expireAt) });
   }
 
   async del(...keys: string[]): Promise<void> {
@@ -31,4 +30,22 @@ export class UpstashStore implements KeyValueStore {
     if (count === 1) await this.redis.expire(key, ttlSeconds);
     return count;
   }
+
+  async push(key: string, value: unknown, options: Required<WriteOptions>): Promise<void> {
+    await this.redis.rpush(key, value);
+    await this.redis.pexpireat(key, futureTime(options.expireAt));
+  }
+
+  async list<T>(key: string): Promise<T[]> {
+    return this.redis.lrange<T>(key, 0, -1);
+  }
+
+  async expire(key: string, expireAt: number): Promise<void> {
+    await this.redis.pexpireat(key, futureTime(expireAt));
+  }
+}
+
+/** A date already in the past would make Redis refuse the write: keep the value a second. */
+function futureTime(expireAt: number): number {
+  return Math.max(expireAt, Date.now() + 1000);
 }

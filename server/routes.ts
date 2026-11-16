@@ -1,7 +1,9 @@
 import { PRONOUNS, type Pronoun } from '../shared/themes.js';
 import type { EventStatus, SessionInfo } from '../shared/types.js';
 import { changeCode, checkHandle, login, register, requireCode, requireHandle, resetCode } from './auth.js';
+import { listChats, openThread, sendMessage, setMuted } from './chat.js';
 import type { AccountRecord, Db } from './db.js';
+import { drawBoard, openEnvelopes, swapReceivers } from './draw-board.js';
 import {
   addParticipant, createEvent, deleteEvent, launchDraw, listAllEvents, myDraw, parseEventInput,
   removeParticipant, requireEvent, requireVisibleEvent, toAdminEvent, toEventInfo, toSummary, updateEvent,
@@ -165,6 +167,34 @@ async function putIdea(ctx: RouteContext): Promise<ApiResponse> {
   return ok(await personSheet(ctx.db, event, account.handle, about));
 }
 
+// ------------------------------------------------------------------ anonymous chat
+
+/** The signed-in account and the event of the URL it may open. */
+async function participantEvent(ctx: RouteContext) {
+  const account = await requireAccount(ctx);
+  return { account, event: await requireVisibleEvent(ctx.db, ctx.params.id ?? '', account.handle) };
+}
+
+async function getChats(ctx: RouteContext): Promise<ApiResponse> {
+  const { account, event } = await participantEvent(ctx);
+  return ok(await listChats(ctx.db, event, account.handle));
+}
+
+async function getChat(ctx: RouteContext): Promise<ApiResponse> {
+  const { account, event } = await participantEvent(ctx);
+  return ok(await openThread(ctx.db, event, account.handle, ctx.params.thread ?? ''));
+}
+
+async function postChatMessage(ctx: RouteContext): Promise<ApiResponse> {
+  const { account, event } = await participantEvent(ctx);
+  return ok(await sendMessage(ctx.db, event, account.handle, ctx.params.thread ?? '', bodyFields(ctx.req).text));
+}
+
+async function postChatMute(ctx: RouteContext): Promise<ApiResponse> {
+  const { account, event } = await participantEvent(ctx);
+  return ok(await setMuted(ctx.db, event, account.handle, ctx.params.thread ?? '', bodyFields(ctx.req).isMuted === true));
+}
+
 // ------------------------------------------------------------------ QG (admin)
 
 async function getAdminEvents(ctx: RouteContext): Promise<ApiResponse> {
@@ -224,6 +254,21 @@ async function postDraw(ctx: RouteContext): Promise<ApiResponse> {
   return ok(await toAdminEvent(ctx.db, await launchDraw(ctx.db, event)));
 }
 
+async function getDrawBoard(ctx: RouteContext): Promise<ApiResponse> {
+  return ok(await drawBoard(ctx.db, await adminEvent(ctx)));
+}
+
+async function postDrawSwap(ctx: RouteContext): Promise<ApiResponse> {
+  const event = await adminEvent(ctx);
+  const fields = bodyFields(ctx.req);
+  return ok(await swapReceivers(ctx.db, event, requireHandle(fields.a), requireHandle(fields.b)));
+}
+
+async function postEnvelopes(ctx: RouteContext): Promise<ApiResponse> {
+  const event = await adminEvent(ctx);
+  return ok(await toAdminEvent(ctx.db, await openEnvelopes(ctx.db, event)));
+}
+
 // ------------------------------------------------------------------ table
 
 const ROUTES: Route[] = [
@@ -240,6 +285,10 @@ const ROUTES: Route[] = [
   route('POST', '/api/events/:id/reveal', postReveal),
   route('GET', '/api/events/:id/people/:handle', getPerson),
   route('PUT', '/api/events/:id/people/:handle/idea', putIdea),
+  route('GET', '/api/events/:id/chats', getChats),
+  route('GET', '/api/events/:id/chats/:thread', getChat),
+  route('POST', '/api/events/:id/chats/:thread/messages', postChatMessage),
+  route('POST', '/api/events/:id/chats/:thread/mute', postChatMute),
   route('GET', '/api/admin/events', getAdminEvents),
   route('POST', '/api/admin/events', postAdminEvent),
   route('GET', '/api/admin/events/:id', getAdminEvent),
@@ -249,6 +298,9 @@ const ROUTES: Route[] = [
   route('DELETE', '/api/admin/events/:id/participants/:handle', deleteParticipant),
   route('POST', '/api/admin/events/:id/participants/:handle/reset-code', postResetCode),
   route('POST', '/api/admin/events/:id/draw', postDraw),
+  route('GET', '/api/admin/events/:id/draw-board', getDrawBoard),
+  route('POST', '/api/admin/events/:id/draw-board/swap', postDrawSwap),
+  route('POST', '/api/admin/events/:id/envelopes', postEnvelopes),
 ];
 
 /** Throws unless a state-changing request is JSON (a cross-site form cannot send JSON). */

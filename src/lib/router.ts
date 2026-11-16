@@ -5,9 +5,9 @@ export type Route =
   | { page: 'home' }
   | { page: 'qg' }
   | { page: 'moi' }
-  | { page: 'event'; eventId: string; tab: EventTab; handle?: string };
+  | { page: 'event'; eventId: string; tab: EventTab; handle?: string; thread?: string };
 
-export type EventTab = 'tirage' | 'bande' | 'person' | 'fiche' | 'qg';
+export type EventTab = 'tirage' | 'bande' | 'person' | 'fiche' | 'qg' | 'chat';
 
 /** Reads a route from a pathname. */
 export function parseRoute(pathname: string): Route {
@@ -17,15 +17,17 @@ export function parseRoute(pathname: string): Route {
   if (parts[0] !== 'e' || !parts[1]) return { page: 'home' };
   const eventId = parts[1];
   if (parts[2] === 'p' && parts[3]) return { page: 'event', eventId, tab: 'person', handle: parts[3] };
+  if (parts[2] === 'm' && parts[3]) return { page: 'event', eventId, tab: 'chat', thread: parts[3] };
   if (parts[2] === 'bande' || parts[2] === 'fiche' || parts[2] === 'qg') return { page: 'event', eventId, tab: parts[2] };
   return { page: 'event', eventId, tab: 'tirage' };
 }
 
-/** The URL of an event's tab. */
-export function eventPath(eventId: string, tab: EventTab = 'tirage', handle?: string): string {
+/** The URL of an event's tab; `param` is the handle of a person's sheet or the id of a chat thread. */
+export function eventPath(eventId: string, tab: EventTab = 'tirage', param?: string): string {
   const base = `/e/${encodeURIComponent(eventId)}`;
   if (tab === 'tirage') return base;
-  if (tab === 'person') return `${base}/p/${encodeURIComponent(handle ?? '')}`;
+  if (tab === 'person') return `${base}/p/${encodeURIComponent(param ?? '')}`;
+  if (tab === 'chat') return `${base}/m/${encodeURIComponent(param ?? '')}`;
   return `${base}/${tab}`;
 }
 

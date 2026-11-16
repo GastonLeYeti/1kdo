@@ -1,5 +1,5 @@
 import { isThemeId } from '../shared/themes.js';
-import type { AdminEvent, EventInfo, EventInput, EventSummary, MyDraw, Person } from '../shared/types.js';
+import { DRAW_VISIBILITIES, type AdminEvent, type DrawVisibility, type EventInfo, type EventInput, type EventSummary, type MyDraw, type Person } from '../shared/types.js';
 import { randomId } from './crypto.js';
 import type { Db, EventRecord } from './db.js';
 import { drawTargets } from './draw.js';
@@ -33,7 +33,18 @@ export function parseEventInput(fields: Record<string, unknown>): EventInput {
     place: cleanText(fields.place, 80) ?? '',
     budget: cleanText(fields.budget, 30) ?? '',
     giftsPerPerson,
+    drawVisibility: DRAW_VISIBILITIES.includes(fields.drawVisibility as DrawVisibility) ? (fields.drawVisibility as DrawVisibility) : 'anonymous',
   };
+}
+
+/** The draw mode of an event; events saved before the option existed are anonymous. */
+export function visibilityOf(event: EventRecord): DrawVisibility {
+  return event.drawVisibility ?? 'anonymous';
+}
+
+/** True once participants may discover their names (events saved before the option: as soon as drawn). */
+export function areEnvelopesOpen(event: EventRecord): boolean {
+  return event.drawnAt !== null && (event.envelopesOpen ?? true);
 }
 
 /** A 400 error about the event form. */
@@ -63,12 +74,13 @@ export function isParticipant(event: EventRecord, handle: string): boolean {
   return event.participants.some((participant) => participant.handle === handle);
 }
 
-/** Saves an event and its draw and ideas with the expiry of its date. */
+/** Saves an event and moves the expiry of everything attached to it (draw, ideas, chats) to its date. */
 async function saveEventEverywhere(db: Db, event: EventRecord): Promise<void> {
   const expireAt = closesAt(event.date);
   await db.saveEvent(event, expireAt);
   await db.saveDraw(event.id, await db.getDraw(event.id), expireAt);
   await db.saveIdeas(event.id, await db.getIdeas(event.id), expireAt);
+  await Promise.all((await db.chatKeys(event)).map((key) => db.store.expire(key, expireAt)));
 }
 
 /** Admin: creates an event with its own invitation code. */
@@ -92,6 +104,9 @@ export async function createEvent(db: Db, input: EventInput): Promise<EventRecor
 export async function updateEvent(db: Db, event: EventRecord, input: EventInput): Promise<EventRecord> {
   if (event.drawnAt && input.giftsPerPerson !== event.giftsPerPerson) {
     throw badInput('Le tirage est fait : le nombre de cadeaux ne peut plus changer.');
+  }
+  if (event.drawnAt && input.drawVisibility !== visibilityOf(event)) {
+    throw badInput('Le tirage est fait : son mode ne peut plus changer.');
   }
   const updated: EventRecord = { ...event, ...input };
   await saveEventEverywhere(db, updated);
@@ -144,7 +159,8 @@ export async function launchDraw(db: Db, event: EventRecord): Promise<EventRecor
     throw new HttpError(409, 'too-few', `Il faut au moins ${needed} participants pour ${event.giftsPerPerson} cadeau(x) chacun.`);
   }
   const draw = drawTargets(event.participants.map((p) => p.handle), event.giftsPerPerson);
-  const drawn: EventRecord = { ...event, drawnAt: new Date().toISOString() };
+  // In visible mode the envelopes stay closed until the admin has checked the draw.
+  const drawn: EventRecord = { ...event, drawnAt: new Date().toISOString(), envelopesOpen: visibilityOf(event) === 'anonymous' };
   await db.saveDraw(event.id, draw, closesAt(event.date));
   await db.saveEvent(drawn, closesAt(event.date));
   return drawn;
@@ -152,7 +168,7 @@ export async function launchDraw(db: Db, event: EventRecord): Promise<EventRecor
 
 /** Admin: deletes an event and all of its data right now. */
 export async function deleteEvent(db: Db, event: EventRecord): Promise<void> {
-  await db.deleteEventData(event.id);
+  await db.deleteEventData(event);
   await db.saveEventIds((await db.getEventIds()).filter((id) => id !== event.id));
   await Promise.all(event.participants.map((p) => removeMembership(db, p.handle, event.id)));
   await refreshMembership(db, adminHandle());
@@ -181,8 +197,9 @@ export async function toEventInfo(db: Db, event: EventRecord): Promise<EventInfo
     place: event.place,
     budget: event.budget,
     giftsPerPerson: event.giftsPerPerson,
+    drawVisibility: visibilityOf(event),
     closesOn: closingDay(event.date),
-    isDrawn: event.drawnAt !== null,
+    isDrawn: areEnvelopesOpen(event),
     bossPronoun: boss?.pronoun ?? null,
     people: event.participants.map((p) => ({ ...p, ideaCount: countIdeasAbout(ideas, p.handle) })),
   };
@@ -196,6 +213,7 @@ export async function toAdminEvent(db: Db, event: EventRecord): Promise<AdminEve
     ...info,
     inviteCode: event.inviteCode,
     drawnAt: event.drawnAt,
+    envelopesOpen: areEnvelopesOpen(event),
     participants: people.map((p, index) => ({
       handle: p.handle,
       name: p.name,
@@ -205,16 +223,23 @@ export async function toAdminEvent(db: Db, event: EventRecord): Promise<AdminEve
   };
 }
 
-/** The signed-in person's draw; names are only sent once revealed (`reveal` reveals them). */
+/**
+ * The signed-in person's draw; names are only sent once revealed (`reveal` reveals them).
+ * While the envelopes are closed the draw looks not made yet, and revealing is refused.
+ */
 export async function myDraw(db: Db, event: EventRecord, handle: string, reveal: boolean): Promise<MyDraw> {
-  const receivers = event.drawnAt ? ((await db.getDraw(event.id))[handle] ?? []) : [];
+  const isOpen = areEnvelopesOpen(event);
+  if (reveal && event.drawnAt && !isOpen) {
+    throw new HttpError(409, 'envelopes-closed', 'Patience : les enveloppes ne sont pas encore ouvertes.');
+  }
+  const receivers = isOpen ? ((await db.getDraw(event.id))[handle] ?? []) : [];
   let isRevealed = event.revealed.includes(handle);
   if (reveal && receivers.length > 0 && !isRevealed) {
     await db.saveEvent({ ...event, revealed: [...event.revealed, handle] }, closesAt(event.date));
     isRevealed = true;
   }
   const targets = isRevealed ? receivers.map((receiver) => personOf(event, receiver)) : [];
-  return { isDrawn: event.drawnAt !== null, isRevealed, targetCount: receivers.length, targets };
+  return { isDrawn: isOpen, isRevealed, targetCount: receivers.length, targets };
 }
 
 /** The participant with this handle (name falls back to the handle). */

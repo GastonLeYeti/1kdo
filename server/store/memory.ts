@@ -40,4 +40,18 @@ export class MemoryStore implements KeyValueStore {
     this.entries.set(key, { json: String(count), expireAt });
     return count;
   }
+
+  async push(key: string, value: unknown, options: Required<WriteOptions>): Promise<void> {
+    const items = await this.list<unknown>(key);
+    this.entries.set(key, { json: JSON.stringify([...items, value]), expireAt: options.expireAt });
+  }
+
+  async list<T>(key: string): Promise<T[]> {
+    return (await this.get<T[]>(key)) ?? [];
+  }
+
+  async expire(key: string, expireAt: number): Promise<void> {
+    const entry = this.live(key);
+    if (entry) entry.expireAt = expireAt;
+  }
 }

@@ -30,7 +30,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 - Pas de formule devinable (type `id + k mod n`). Le serveur ne renvoie à chacun **que ses propres cibles**. En mode « 100 % anonyme », même l'admin ne voit pas qui a tiré qui ; en mode « visible », voir la section suivante.
 - Côté écran : cadeau avec étiquette « Pour : \*\*\*\*\*\*\* » → bouton « Découvrir le nom » → animation → « Tu es la Mère Noël de… Sam ». Bouton « Masquer » pour cacher le nom.
 
-### Tirage visible et ajustable (décidé le 16/11/2026, **à implémenter**)
+### Tirage visible et ajustable (décidé et implémenté le 16/11/2026)
 - Option par événement : **« 100 % anonyme »** (par défaut) ou **« Tirage visible par l'admin »**. Choisie à la création, modifiable tant que le tirage n'est pas lancé.
 - **Mode anonyme** : comportement actuel, inchangé. Le tirage ouvre directement les enveloppes ; personne ne voit ni ne modifie le tirage.
 - **Mode visible** :
@@ -48,7 +48,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
   - La découverte du nom (`myDraw` / `reveal`) est refusée tant que `envelopesOpen` est faux.
   - Tests : un échange valide conserve X donnés et X reçus pour tout le monde ; échanges refusés (soi-même, doublon, personne verrouillée, mode anonyme) ; découverte impossible avant l'ouverture ; avertissement de duo réciproque.
 
-### Discussion anonyme (décidé le 16/11/2026, **à implémenter, avant le 20/12**)
+### Discussion anonyme (décidé et implémenté le 16/11/2026)
 - Un **fil de discussion par paire « qui offre → qui reçoit »**, dans tous les modes (anonyme ou visible). Il s'ouvre dès que la personne qui offre a **découvert le nom**.
 - **Côté qui offre** : « 💬 Discuter avec Sam » (depuis « Mon tirage », sous le nom découvert). Elle sait à qui elle parle.
 - **Côté qui reçoit** : « 💬 Ton Esprit de Noël secret » (entrée visible dans « Mon tirage » ou « Ma fiche »). Elle peut **répondre et aussi écrire en premier**, sans jamais savoir qui est derrière. Le fil n'apparaît côté destinataire qu'une fois que la personne qui offre a découvert le nom.
@@ -126,13 +126,24 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 | Retrait d'un participant | Avant le tirage seulement ; ses idées (écrites par lui et sur lui) sont supprimées. |
 | Fermeture | À 00:00 UTC du jour J+3 (ex. événement le 20/12 → fermé le 23/12). Une route publique `/api/events/:id/status` permet d'afficher « C'est fini » même déconnecté. |
 | Neige du bandeau | Seulement pour le thème Noël. |
+| Tirage visible : transparence | En mode visible, les participants voient la mention « 👀 Tirage visible par {titre de l'admin} » dans « Mon tirage », et la confirmation du tirage ne promet plus que l'admin ne saura pas. |
+| Tirage visible : contrôles d'un échange | Échanger deux listes entières ne peut pas créer de doublon : le seul refus utile est « quelqu'un s'offrirait un cadeau ». Le serveur revérifie quand même tout le tirage (X donnés, X reçus, ni soi-même ni doublon) avant d'enregistrer. |
+| Tirage visible : limite des échanges | Un échange porte sur des listes entières : avec peu de monde et plusieurs cadeaux, il peut n'exister aucun échange possible (ex. 5 personnes, 2 cadeaux : chaque échange ferait s'offrir un cadeau à quelqu'un). L'app refuse alors l'échange avec un message clair. |
+| Tirage visible : inscriptions tardives | Une personne qui s'inscrit après le tirage attend elle aussi l'ouverture des enveloppes. |
+| Discussion : titre côté destinataire | Forme « iel » du thème avec majuscule (« L'Esprit de Noël », « L'Esprit de Noël n°2 » si X > 1), calculée par le serveur. |
+| Discussion : identifiant de fil | HMAC de (événement, qui offre, qui reçoit) avec `SESSION_SECRET` : opaque pour le destinataire, et le même si le fil est recréé. |
+| Discussion : stockage | Index des fils `kdo:chat:{eventId}` (numéro, pause) ; messages en liste Redis `kdo:chat:{eventId}:{threadId}` (ajout atomique) ; lus par personne `kdo:chatseen:{eventId}:{handle}`. Tout expire avec l'événement, y compris si sa date change. |
+| Discussion : dates | Le serveur n'envoie que le jour (`YYYY-MM-DD`, heure de Paris), jamais l'heure ; l'app affiche « aujourd'hui », « hier » ou « le 12/12 ». |
+| Discussion : lu / non lu | Pastille sur « Mon tirage » et sur chaque fil (vérification toutes les 60 s, 20 s dans une conversation ouverte). **Pas d'accusé de lecture** : l'autre ne sait jamais si on a lu. |
+| Discussion : mettre en pause | Le destinataire peut mettre un fil en pause (🔇) puis le reprendre ; pendant la pause, la personne qui offre ne peut plus écrire et voit « fil en pause ». |
+| Discussion : débit | 30 messages par 10 minutes et par personne. |
 | Écriture concurrente | Les enregistrements sont des documents JSON lus puis réécrits ; suffisant pour 10 à 12 personnes. |
 
 ## État (13/11/2026)
 
 Les étapes 1 à 8 du plan sont faites : app complète, 20 tests verts, `npm run build` sans erreur, écrans vérifiés à 360 et 390 px (aucun défilement horizontal), build de production testé avec la CSP stricte. En ligne sur `1kdo.gaston.monster` depuis le 13/11/2026 (Vercel, Node 26, Upstash Redis à Francfort). Reste à l'admin : sa première connexion et un test avec de faux comptes (`DEPLOY.md`, étapes 5 et 6).
 
-Évolutions en attente (16/11/2026) : **tirage visible et ajustable** puis **discussion anonyme**, voir les sections du même nom dans « Décisions validées ».
+16/11/2026 : **tirage visible et ajustable** et **discussion anonyme** implémentés (38 tests verts), voir les sections du même nom dans « Décisions validées » et les choix par défaut « Tirage visible : … » et « Discussion : … ».
 
 ## Plan d'exécution
 
