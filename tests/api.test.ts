@@ -174,3 +174,14 @@ describe('end of life', () => {
     expect((await call('GET', '/api/admin/events', undefined, admin)).body).toEqual([]);
   });
 });
+
+describe('pronouns', () => {
+  it('shows the pronoun a person chose on their sheet', async () => {
+    const { call, signUp, inviteCode, eventId } = await setupEvent(NAMES);
+    const alpha = await signUp('alpha.fictif', inviteCode);
+    const bravo = await signUp('bravo.fictif', inviteCode);
+    await call('PATCH', '/api/me', { pronoun: 'iel' }, alpha);
+    expect((await call('GET', `/api/events/${eventId}/people/charlie.fictif`, undefined, bravo)).body.pronoun).toBeNull();
+    expect((await call('GET', `/api/events/${eventId}/people/alpha.fictif`, undefined, bravo)).body.pronoun).toBe('iel');
+  });
+});

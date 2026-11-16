@@ -31,6 +31,7 @@ export function PersonSheetScreen({ event, reloadEvent, handle }: EventContext &
       <div className="pad">
         <div className="prof">
           <Identicon handle={sheet.handle} size={64} />
+          {sheet.pronoun && <span className="pron" title="Son pronom">{sheet.pronoun}</span>}
           <a className="btn white sm" href={`https://www.instagram.com/${encodeURIComponent(sheet.handle)}/`} target="_blank" rel="noopener noreferrer">
             📸 Voir son Insta
           </a>

@@ -199,6 +199,7 @@ input.input:disabled { opacity: .6; }
   font-size: 11px; font-weight: 700; transform: rotate(6deg); }
 .cn { font-family: var(--title); font-weight: 700; font-size: 17px; margin-top: 6px; }
 .ch { font-size: 12px; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.pron { padding: 4px 12px; font-size: 14px; font-weight: 700; background: #fff; border: 1.5px solid var(--ink); border-radius: 999px; }
 .cp { font-size: 12px; font-weight: 700; margin-top: 4px; }
 
 /* ---------------------------------------------------------------- sheets */
