@@ -27,8 +27,26 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 ### Tirage
 - L'admin clique **« Lancer le tirage »** (avec confirmation) : la liste est **figée**.
 - Algorithme : ordre secret aléatoire en **un seul cercle** (Sattolo). Avec X cadeaux, chacun offre aux **X personnes suivantes** dans le cercle → chacun offre X et reçoit X, jamais soi-même, jamais deux fois la même personne. Il faut au moins X + 1 participants.
-- Pas de formule devinable (type `id + k mod n`). Le serveur ne renvoie à chacun **que ses propres cibles**. Même l'admin ne voit pas qui a tiré qui.
+- Pas de formule devinable (type `id + k mod n`). Le serveur ne renvoie à chacun **que ses propres cibles**. En mode « 100 % anonyme », même l'admin ne voit pas qui a tiré qui ; en mode « visible », voir la section suivante.
 - Côté écran : cadeau avec étiquette « Pour : \*\*\*\*\*\*\* » → bouton « Découvrir le nom » → animation → « Tu es la Mère Noël de… Sam ». Bouton « Masquer » pour cacher le nom.
+
+### Tirage visible et ajustable (décidé le 16/11/2026, **à implémenter**)
+- Option par événement : **« 100 % anonyme »** (par défaut) ou **« Tirage visible par l'admin »**. Choisie à la création, modifiable tant que le tirage n'est pas lancé.
+- **Mode anonyme** : comportement actuel, inchangé. Le tirage ouvre directement les enveloppes ; personne ne voit ni ne modifie le tirage.
+- **Mode visible** :
+  1. « Lancer le tirage » fige la liste, mais **les enveloppes restent fermées** : côté participants, on voit encore « ⏳ Patience… ».
+  2. Dans le QG, un tableau **« Qui offre à qui »** : chaque personne → ses X destinataires. Rien n'est masqué, y compris pour l'admin elle-même (elle voit qui lui offre).
+  3. Ajustement par **échange** : l'admin choisit deux personnes et leurs listes de destinataires sont échangées. Chacun offre et reçoit toujours X cadeaux.
+  4. Un échange est **refusé** s'il fait offrir quelqu'un à lui-même ou deux fois à la même personne. Il est **signalé sans être bloqué** s'il crée un duo réciproque (A → B et B → A).
+  5. Bouton **« Ouvrir les enveloppes 🎁 »** (avec confirmation) : à partir de là, les participants peuvent découvrir leur nom.
+  6. **Verrou** : dès qu'une personne a découvert son nom, sa ligne est 🔒 et on ne peut plus changer ses destinataires. Un échange n'est donc possible qu'entre deux personnes qui n'ont pas encore découvert leur nom (avant ou après l'ouverture des enveloppes).
+- Notes pour l'implémentation :
+  - `EventRecord` : ajouter `drawVisibility: 'anonymous' | 'visible'` et `envelopesOpen: boolean`. `envelopesOpen` est fixé au lancement du tirage : `true` en mode anonyme, `false` en mode visible.
+  - Événements déjà enregistrés (champs absents) : lus comme `anonymous`, avec `envelopesOpen` = « le tirage est déjà lancé ». Aucune migration. **Un événement existant dont le tirage n'est pas lancé doit pouvoir passer en mode visible** depuis ses réglages dans le QG (cas réel de l'admin).
+  - `DrawRecord` reste la source de vérité. Après des échanges, ce n'est plus forcément un cercle unique : c'est normal.
+  - Nouvelles routes admin : lire le tirage complet, échanger deux personnes, ouvrir les enveloppes. Toutes refusées en mode anonyme ; en mode anonyme, aucune route ne renvoie le tirage complet.
+  - La découverte du nom (`myDraw` / `reveal`) est refusée tant que `envelopesOpen` est faux.
+  - Tests : un échange valide conserve X donnés et X reçus pour tout le monde ; échanges refusés (soi-même, doublon, personne verrouillée, mode anonyme) ; découverte impossible avant l'ouverture ; avertissement de duo réciproque.
 
 ### Fiches et idées
 - Chaque fiche = mur d'**idées** (post-its). Chacun a **son** post-it par personne, modifiable par lui seul, **sans nom affiché**.
@@ -97,6 +115,8 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 ## État (13/11/2026)
 
 Les étapes 1 à 8 du plan sont faites : app complète, 20 tests verts, `npm run build` sans erreur, écrans vérifiés à 360 et 390 px (aucun défilement horizontal), build de production testé avec la CSP stricte. En ligne sur `1kdo.gaston.monster` depuis le 13/11/2026 (Vercel, Node 26, Upstash Redis à Francfort). Reste à l'admin : sa première connexion et un test avec de faux comptes (`DEPLOY.md`, étapes 5 et 6).
+
+Évolution en attente (16/11/2026) : **tirage visible et ajustable**, voir la section du même nom dans « Décisions validées ».
 
 ## Plan d'exécution
 
