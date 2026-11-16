@@ -1,13 +1,13 @@
 # 1kdo — « Un kdo pour qui ? » : point de reprise
 
-Ce fichier résume tout ce qui a été décidé dans la première conversation (cloud) pour pouvoir reprendre ailleurs, par exemple dans VS Code.
+Ce fichier résume les décisions de conception et les choix par défaut, pour reprendre le travail n'importe où. Le code fait foi ; ce fichier dit pourquoi.
 
 ## Le projet
 
 Une web app mobile pour organiser des **chaînes de cadeaux** entre amis (Secret Santa, anniversaire, etc.).
-Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personnes). La date, le lieu, le budget et la liste des participants sont saisis par l'admin dans le QG : **ils ne vont jamais dans le code** (repo public).
+Pensée pour un groupe d'amis (une dizaine de personnes). La date, le lieu, le budget et la liste des participants sont saisis par l'admin dans le QG : **ils ne vont jamais dans le code** (repo public).
 
-- Adresse : **`1kdo.gaston.monster`**, projet indépendant avec son propre projet Vercel.
+- Hébergement : un projet Vercel dédié, avec le domaine choisi par la personne qui déploie (voir `DEPLOY.md`).
 - Maquettes Figma (fichier privé, accessible seulement à son propriétaire) : https://www.figma.com/design/lsXrBACRvaunRsrq1utviX (page « Maquettes » : 15 écrans v3 + 3 cadres de référence de style en haut). Les prénoms des maquettes Figma sont à remplacer par des prénoms fictifs ; dans `design/`, c'est déjà fait.
 - Guides de style des thèmes : `design/themes-apercu.png` (pas encore dans Figma : limite d'appels Figma Starter atteinte).
 
@@ -42,7 +42,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
   6. **Verrou** : dès qu'une personne a découvert son nom, sa ligne est 🔒 et on ne peut plus changer ses destinataires. Un échange n'est donc possible qu'entre deux personnes qui n'ont pas encore découvert leur nom (avant ou après l'ouverture des enveloppes).
 - Notes pour l'implémentation :
   - `EventRecord` : ajouter `drawVisibility: 'anonymous' | 'visible'` et `envelopesOpen: boolean`. `envelopesOpen` est fixé au lancement du tirage : `true` en mode anonyme, `false` en mode visible.
-  - Événements déjà enregistrés (champs absents) : lus comme `anonymous`, avec `envelopesOpen` = « le tirage est déjà lancé ». Aucune migration. **Un événement existant dont le tirage n'est pas lancé doit pouvoir passer en mode visible** depuis ses réglages dans le QG (cas réel de l'admin).
+  - Événements déjà enregistrés (champs absents) : lus comme `anonymous`, avec `envelopesOpen` = « le tirage est déjà lancé ». Aucune migration. **Un événement existant dont le tirage n'est pas lancé doit pouvoir passer en mode visible** depuis ses réglages dans le QG.
   - `DrawRecord` reste la source de vérité. Après des échanges, ce n'est plus forcément un cercle unique : c'est normal.
   - Nouvelles routes admin : lire le tirage complet, échanger deux personnes, ouvrir les enveloppes. Toutes refusées en mode anonyme ; en mode anonyme, aucune route ne renvoie le tirage complet.
   - La découverte du nom (`myDraw` / `reveal`) est refusée tant que `envelopesOpen` est faux.
@@ -51,8 +51,8 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 ### Discussion anonyme (décidé et implémenté le 16/11/2026)
 - Un **fil de discussion par paire « qui offre → qui reçoit »**, dans tous les modes (anonyme ou visible). Il s'ouvre dès que la personne qui offre a **découvert le nom**.
 - **Côté qui offre** : « 💬 Discuter avec Sam » (depuis « Mon tirage », sous le nom découvert). Elle sait à qui elle parle.
-- **Côté qui reçoit** : « 💬 Ton Esprit de Noël secret » (entrée visible dans « Mon tirage » ou « Ma fiche »). Elle peut **répondre et aussi écrire en premier**, sans jamais savoir qui est derrière. Le fil n'apparaît côté destinataire qu'une fois que la personne qui offre a découvert le nom.
-- Avec X cadeaux par personne, le destinataire a X fils : « Esprit de Noël n°1, n°2… ». Les numéros sont attribués **au hasard** (pas dans l'ordre du tirage ni des prénoms) et restent stables.
+- **Côté qui reçoit** : « 💬 L'Esprit de Noël » (section « Messages secrets » de « Mon tirage »). Elle peut **répondre et aussi écrire en premier**, sans jamais savoir qui est derrière. Le fil n'apparaît côté destinataire qu'une fois que la personne qui offre a découvert le nom.
+- Avec X cadeaux par personne, le destinataire a X fils : « L'Esprit de Noël n°1, n°2… ». Les numéros sont attribués **au hasard** (pas dans l'ordre du tirage ni des prénoms) et restent stables.
 - **Règles d'anonymat (côté serveur, non négociables)** :
   - côté destinataire, le titre est **toujours la forme « iel » du thème** (« l'Esprit de Noël »), quel que soit le pronom de la personne qui offre : sinon le genre la trahit ;
   - aucune réponse d'API envoyée au destinataire ne contient le @, le prénom ni un identifiant stable de la personne qui offre (utiliser un identifiant de fil opaque) ;
@@ -69,7 +69,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 - On peut écrire sur sa propre fiche (« Ce que tu aimes »).
 - **La personne ne voit pas les idées des autres sur elle** (vérifié côté serveur) : « Les autres ont écrit 3 idées sur toi. Surprise ! ».
 - **Pas de wishlist**, pas de liens, pas de photos de produits.
-- Choix **il / elle / iel** uniquement sur « Ma fiche » (pas à la première visite). Le texte s'accorde (voir thèmes).
+- Choix **il / elle / iel** sur « Ma fiche » ou « Mon profil » (pas à la première visite). Le texte s'accorde (voir thèmes) et le pronom s'affiche sur la fiche de la personne (pas sur les cartes de « La bande »).
 
 ### Profils
 - Avatar **généré à partir du @** (identicon 5×5 façon GitHub). Bouton « Voir son Insta ». Pas de photos.
@@ -86,14 +86,14 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 ### Style
 - Style **« Pop / asymmetric grid »** : fond crème, contours épais couleur encre, blocs pastel, ombres dures décalées, Space Grotesk (titres) + DM Sans (texte).
 - 6 thèmes (couleurs + mots) : Noël, Anniversaire, Pâques, Saint-Valentin, Bureau, Pop (neutre). Détails dans `design/gen-themes.mjs` (objet `THEMES`).
-- **Pour Noël 2026, seul le thème Noël doit être finalisé** ; les autres viennent après.
+- Le thème Noël est le plus soigné ; les 5 autres fonctionnent.
 
-## Stack prévue
+## Stack
 
 - Front : Vite + React + TypeScript, mobile first, sans la 3D du portfolio.
 - API : fonctions serverless Vercel (`api/`), base **Upstash Redis** (intégration Vercel), données avec TTL.
 - Session : cookie httpOnly signé. Code invitation dans le lien.
-- Tests (vitest) : tirage (pas de soi-même, X cibles distinctes, X reçus), visibilité des idées, blocage des essais de code.
+- Tests (vitest) : tirage (pas de soi-même, X cibles distinctes, X reçus), visibilité des idées, blocage des essais de code, fin de vie, tirage visible (échanges, verrou, discrétion), anonymat des messages.
 
 ## Choix par défaut (tranchés pour travailler sans poser de questions)
 
@@ -103,7 +103,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 | Référence visuelle | `design/gen-screens.mjs` (→ `out/screens.html`) est la **source de vérité** des écrans. Figma n'est qu'un complément (la limite d'appels peut bloquer). |
 | Compte | Un compte par @insta, **commun à tous les événements** (même code partout). Si la personne est dans plusieurs événements : écran « Mes événements » après connexion. |
 | Admin | Identifiée par la variable d'environnement `ADMIN_INSTA` (son @). Elle se connecte comme tout le monde (@ + code). Seule elle voit le QG et peut créer des événements. |
-| QG | Liste des événements + « Créer un événement » (titre, thème, date, lieu, budget, X cadeaux). Dans un événement : participants, liens perso, lancer le tirage, réglages, suppression. |
+| QG | Liste des événements + « Créer un événement » (titre, thème, date, lieu, budget, X cadeaux, mode du tirage). Dans un événement : participants, lien de groupe et liens perso, lancer le tirage, « Qui offre à qui » en mode visible, réglages, suppression. |
 | Lieu | Dans le bandeau 📍, le lieu est un lien : Plans sur iPhone/iPad/Mac, Google Maps ailleurs (nouvel onglet). |
 | Lien de groupe | `/e/{eventId}?i={codeInvitation}` : un code d'invitation par événement, le même lien pour tous. Seuls les @ de la liste peuvent s'inscrire. |
 | Lien perso | `/e/{eventId}?i={codeInvitation}&u={handle}` : le même, avec le @ pré-rempli. Le code à 6 chiffres reste demandé. |
@@ -115,10 +115,10 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 | Stockage en local | Adaptateur mémoire quand les variables Upstash sont absentes (dev + tests). |
 | Données d'exemple | Uniquement des prénoms et @ fictifs (repo public). |
 | Node | Node 26 (`.nvmrc`, `engines`), comme le projet Vercel. |
-| Première inscription | Elle exige le code d'invitation de l'événement (dans le lien perso). Sans lien : écran « Ouvre ton lien perso ». Un mauvais code d'invitation compte comme un essai raté. |
+| Première inscription | Elle exige le code d'invitation de l'événement (dans le lien de groupe ou le lien perso). Sans lien : écran « Ton lien d'invitation ». Un mauvais code d'invitation compte comme un essai raté. |
 | Première inscription de l'admin | Lien `/?i={ADMIN_INVITE}&u={ADMIN_INSTA}` : variable `ADMIN_INVITE` pour qu'on ne puisse pas prendre le @ de l'admin avant elle. |
 | Sessions | Le cookie porte une version du code : changer de code ou une réinitialisation par l'admin déconnecte les anciennes sessions. |
-| Titre de l'admin | S'accorde avec le pronom choisi par l'admin dans « Ma fiche » (« iel » tant qu'elle n'a rien choisi). |
+| Titre de l'admin | S'accorde avec le pronom choisi par l'admin dans « Ma fiche » ou « Mon profil » (« iel » tant que rien n'est choisi). |
 | Idées | Une seule idée par auteur et par fiche (modifiable, effaçable). Les idées des autres sont triées par ordre alphabétique pour que leur ordre ne trahisse pas l'auteur. Ce que la personne écrit sur sa propre fiche apparaît à part (« ❤️ Sam aime : »). |
 | Admin non participante | Elle peut ouvrir tous les événements (La bande, QG) mais n'a ni tirage ni post-it si elle n'est pas dans la liste. |
 | Masquer | Après la première découverte, le nom est masqué par défaut à chaque visite (« Revoir le nom 👀 »), sans rejouer l'animation. |
@@ -137,13 +137,15 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 | Discussion : lu / non lu | Pastille sur « Mon tirage » et sur chaque fil (vérification toutes les 60 s, 20 s dans une conversation ouverte). **Pas d'accusé de lecture** : l'autre ne sait jamais si on a lu. |
 | Discussion : mettre en pause | Le destinataire peut mettre un fil en pause (🔇) puis le reprendre ; pendant la pause, la personne qui offre ne peut plus écrire et voit « fil en pause ». |
 | Discussion : débit | 30 messages par 10 minutes et par personne. |
-| Écriture concurrente | Les enregistrements sont des documents JSON lus puis réécrits ; suffisant pour 10 à 12 personnes. |
+| Profil | Un clic sur son avatar ouvre « Mon profil » (pronom, changer de code, se déconnecter), même hors d'un événement. |
+| Ordinateur | À partir de 960 px : carte centrée sur fond pointillé ; dans un événement, les onglets deviennent une barre latérale. |
+| Écriture concurrente | Les enregistrements sont des documents JSON lus puis réécrits ; suffisant pour une dizaine de personnes. Les messages, eux, sont ajoutés de façon atomique (liste Redis). |
 
-## État (13/11/2026)
+## État
 
-Les étapes 1 à 8 du plan sont faites : app complète, 20 tests verts, `npm run build` sans erreur, écrans vérifiés à 360 et 390 px (aucun défilement horizontal), build de production testé avec la CSP stricte. En ligne sur `1kdo.gaston.monster` depuis le 13/11/2026 (Vercel, Node 26, Upstash Redis à Francfort). Reste à l'admin : sa première connexion et un test avec de faux comptes (`DEPLOY.md`, étapes 5 et 6).
-
-16/11/2026 : **tirage visible et ajustable** et **discussion anonyme** implémentés (38 tests verts), voir les sections du même nom dans « Décisions validées » et les choix par défaut « Tirage visible : … » et « Discussion : … ».
+- Les étapes 1 à 8 du plan sont faites et l'app est en production (Vercel, Node 26, Upstash Redis).
+- Ajouts depuis : page « Mon profil », mise en page ordinateur, lien de groupe, lieu ouvert dans l'app de cartes, pronom sur les fiches, **tirage visible et ajustable**, **messages secrets**.
+- 39 tests verts, `npm run build` sans erreur, écrans vérifiés à 360 et 390 px (aucun défilement horizontal) et sur ordinateur.
 
 ## Plan d'exécution
 
@@ -154,7 +156,7 @@ Les étapes 1 à 8 du plan sont faites : app complète, 20 tests verts, `npm run
 5. La bande, fiches, idées (règles de visibilité), Ma fiche (pronom, ses goûts).
 6. Fin de vie (TTL, page « C'est fini », « Tout supprimer »).
 7. Tests vitest + `npm run build` sans erreur, vérification visuelle mobile (Playwright, 390 px).
-8. `DEPLOY.md` : étapes manuelles pour l'admin (créer le projet Vercel, brancher Upstash, variables `ADMIN_INSTA` et `SESSION_SECRET`, domaine `1kdo.gaston.monster` chez le registrar), puis test avec de faux comptes.
+8. `DEPLOY.md` : étapes manuelles pour la personne qui déploie (créer le projet Vercel, brancher Upstash, variables `ADMIN_INSTA`, `ADMIN_INVITE` et `SESSION_SECRET`, domaine chez son registrar), puis test avec de faux comptes.
 
 ## Ce que l'admin fera elle-même à la fin
 
