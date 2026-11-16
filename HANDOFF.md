@@ -48,6 +48,22 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
   - La découverte du nom (`myDraw` / `reveal`) est refusée tant que `envelopesOpen` est faux.
   - Tests : un échange valide conserve X donnés et X reçus pour tout le monde ; échanges refusés (soi-même, doublon, personne verrouillée, mode anonyme) ; découverte impossible avant l'ouverture ; avertissement de duo réciproque.
 
+### Discussion anonyme (décidé le 16/11/2026, **à implémenter, avant le 20/12**)
+- Un **fil de discussion par paire « qui offre → qui reçoit »**, dans tous les modes (anonyme ou visible). Il s'ouvre dès que la personne qui offre a **découvert le nom**.
+- **Côté qui offre** : « 💬 Discuter avec Sam » (depuis « Mon tirage », sous le nom découvert). Elle sait à qui elle parle.
+- **Côté qui reçoit** : « 💬 Ton Esprit de Noël secret » (entrée visible dans « Mon tirage » ou « Ma fiche »). Elle peut **répondre et aussi écrire en premier**, sans jamais savoir qui est derrière. Le fil n'apparaît côté destinataire qu'une fois que la personne qui offre a découvert le nom.
+- Avec X cadeaux par personne, le destinataire a X fils : « Esprit de Noël n°1, n°2… ». Les numéros sont attribués **au hasard** (pas dans l'ordre du tirage ni des prénoms) et restent stables.
+- **Règles d'anonymat (côté serveur, non négociables)** :
+  - côté destinataire, le titre est **toujours la forme « iel » du thème** (« l'Esprit de Noël »), quel que soit le pronom de la personne qui offre : sinon le genre la trahit ;
+  - aucune réponse d'API envoyée au destinataire ne contient le @, le prénom ni un identifiant stable de la personne qui offre (utiliser un identifiant de fil opaque) ;
+  - les messages n'affichent qu'une date grossière (« aujourd'hui », « hier », « le 12/12 »), **jamais l'heure** ;
+  - l'admin, même en mode visible, ne voit **pas** les messages.
+- Texte seul, **500 caractères max** par message, pas de liens cliquables ni d'images. Pas de modification ni de suppression des messages (sauf « Tout supprimer » de l'événement).
+- **Pas de notifications sur le téléphone** : une pastille « nouveau message » sur l'onglet concerné, et un rafraîchissement automatique (toutes les ~20 s) tant que la conversation est ouverte.
+- Fin de vie : les messages ont le même TTL que l'événement (J+3).
+- Interaction avec le tirage visible : on ne peut discuter qu'après avoir découvert son nom, donc après le verrou ; un échange dans le QG ne peut jamais toucher un fil existant.
+- Notes pour l'implémentation : clé Redis par événement (ex. `kdo:chat:{eventId}` → fil par paire), limite de débit simple (ex. 30 messages / 10 min par personne). Tests : le destinataire ne reçoit jamais l'identité de l'auteur, le titre est toujours neutre, accès refusé à un tiers ou avant la découverte, 500 caractères max, pas d'heure dans les réponses.
+
 ### Fiches et idées
 - Chaque fiche = mur d'**idées** (post-its). Chacun a **son** post-it par personne, modifiable par lui seul, **sans nom affiché**.
 - On peut écrire sur sa propre fiche (« Ce que tu aimes »).
@@ -116,7 +132,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 
 Les étapes 1 à 8 du plan sont faites : app complète, 20 tests verts, `npm run build` sans erreur, écrans vérifiés à 360 et 390 px (aucun défilement horizontal), build de production testé avec la CSP stricte. En ligne sur `1kdo.gaston.monster` depuis le 13/11/2026 (Vercel, Node 26, Upstash Redis à Francfort). Reste à l'admin : sa première connexion et un test avec de faux comptes (`DEPLOY.md`, étapes 5 et 6).
 
-Évolution en attente (16/11/2026) : **tirage visible et ajustable**, voir la section du même nom dans « Décisions validées ».
+Évolutions en attente (16/11/2026) : **tirage visible et ajustable** puis **discussion anonyme**, voir les sections du même nom dans « Décisions validées ».
 
 ## Plan d'exécution
 
