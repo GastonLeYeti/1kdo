@@ -51,7 +51,6 @@ export interface EventInfo extends EventSummary {
   place: string;
   budget: string;
   giftsPerPerson: number;
-  drawVisibility: DrawVisibility;
   closesOn: string;
   /** True once names can be discovered: drawn, and the envelopes are open. */
   isDrawn: boolean;
@@ -91,6 +90,8 @@ export interface AdminParticipant extends Person {
 export interface AdminEvent extends Omit<EventInfo, 'people'> {
   inviteCode: string;
   drawnAt: string | null;
+  /** Admin only: participants are never told whether the draw is visible. */
+  drawVisibility: DrawVisibility;
   envelopesOpen: boolean;
   participants: AdminParticipant[];
 }

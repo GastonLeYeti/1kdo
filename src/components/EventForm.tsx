@@ -74,7 +74,7 @@ export function EventForm({ initial, submitLabel, isDrawn = false, onSubmit }: {
 
 const DRAW_MODES: Array<[DrawVisibility, string, string]> = [
   ['anonymous', '🙈 100 % anonyme', 'Personne ne verra qui offre à qui, toi non plus.'],
-  ['visible', '👀 Visible par moi', 'Tu vois le tirage et tu peux échanger des personnes avant d’ouvrir les enveloppes. La bande saura que tu le vois.'],
+  ['visible', '👀 Visible par moi', 'Tu vois le tirage et tu peux échanger des personnes avant d’ouvrir les enveloppes. Personne d’autre ne le sait.'],
 ];
 
 /** "100 % anonyme" or "Tirage visible par l'admin"; frozen once the draw is made. */

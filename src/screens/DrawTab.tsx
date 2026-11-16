@@ -66,7 +66,6 @@ export function DrawTab({ event, chats, reloadChats }: EventContext) {
         ) : (
           <ToDiscover draw={draw} shaking={phase === 'shaking'} onReveal={() => void reveal()} />
         )}
-        {isParticipant && event.drawVisibility === 'visible' && <p className="small c tight">👀 Tirage visible par {boss}</p>}
         <ErrorLine message={error} />
         <ChatList eventId={event.id} chats={chats} />
         <Countdown date={event.date} time={event.time} />

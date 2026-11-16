@@ -126,7 +126,7 @@ Premier usage réel : un Secret Santa de Noël 2026 entre amis (10 à 12 personn
 | Retrait d'un participant | Avant le tirage seulement ; ses idées (écrites par lui et sur lui) sont supprimées. |
 | Fermeture | À 00:00 UTC du jour J+3 (ex. événement le 20/12 → fermé le 23/12). Une route publique `/api/events/:id/status` permet d'afficher « C'est fini » même déconnecté. |
 | Neige du bandeau | Seulement pour le thème Noël. |
-| Tirage visible : transparence | En mode visible, les participants voient la mention « 👀 Tirage visible par {titre de l'admin} » dans « Mon tirage », et la confirmation du tirage ne promet plus que l'admin ne saura pas. |
+| Tirage visible : discrétion | Les participants ne savent **jamais** que le tirage est visible : aucune mention dans l'app, et l'API ne leur envoie ni le mode ni l'état des enveloppes (enveloppes fermées = « ⏳ Patience… », comme avant le tirage). Seule la confirmation du tirage, côté QG, change de texte. |
 | Tirage visible : contrôles d'un échange | Échanger deux listes entières ne peut pas créer de doublon : le seul refus utile est « quelqu'un s'offrirait un cadeau ». Le serveur revérifie quand même tout le tirage (X donnés, X reçus, ni soi-même ni doublon) avant d'enregistrer. |
 | Tirage visible : limite des échanges | Un échange porte sur des listes entières : avec peu de monde et plusieurs cadeaux, il peut n'exister aucun échange possible (ex. 5 personnes, 2 cadeaux : chaque échange ferait s'offrir un cadeau à quelqu'un). L'app refuse alors l'échange avec un message clair. |
 | Tirage visible : inscriptions tardives | Une personne qui s'inscrit après le tirage attend elle aussi l'ouverture des enveloppes. |

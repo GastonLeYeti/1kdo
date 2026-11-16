@@ -197,7 +197,6 @@ export async function toEventInfo(db: Db, event: EventRecord): Promise<EventInfo
     place: event.place,
     budget: event.budget,
     giftsPerPerson: event.giftsPerPerson,
-    drawVisibility: visibilityOf(event),
     closesOn: closingDay(event.date),
     isDrawn: areEnvelopesOpen(event),
     bossPronoun: boss?.pronoun ?? null,
@@ -213,6 +212,7 @@ export async function toAdminEvent(db: Db, event: EventRecord): Promise<AdminEve
     ...info,
     inviteCode: event.inviteCode,
     drawnAt: event.drawnAt,
+    drawVisibility: visibilityOf(event),
     envelopesOpen: areEnvelopesOpen(event),
     participants: people.map((p, index) => ({
       handle: p.handle,
@@ -230,7 +230,7 @@ export async function toAdminEvent(db: Db, event: EventRecord): Promise<AdminEve
 export async function myDraw(db: Db, event: EventRecord, handle: string, reveal: boolean): Promise<MyDraw> {
   const isOpen = areEnvelopesOpen(event);
   if (reveal && event.drawnAt && !isOpen) {
-    throw new HttpError(409, 'envelopes-closed', 'Patience : les enveloppes ne sont pas encore ouvertes.');
+    throw new HttpError(409, 'envelopes-closed', "Patience : le tirage n'est pas encore fait.");
   }
   const receivers = isOpen ? ((await db.getDraw(event.id))[handle] ?? []) : [];
   let isRevealed = event.revealed.includes(handle);

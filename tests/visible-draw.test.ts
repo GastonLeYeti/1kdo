@@ -41,7 +41,9 @@ describe('visible draw', () => {
     const alpha = cookies.Alpha;
     expect((await call('GET', `/api/events/${eventId}/draw`, undefined, alpha)).body).toMatchObject({ isDrawn: false, targets: [] });
     expect((await call('POST', `/api/events/${eventId}/reveal`, {}, alpha)).status).toBe(409);
-    expect((await call('GET', `/api/events/${eventId}`, undefined, alpha)).body).toMatchObject({ isDrawn: false, drawVisibility: 'visible' });
+    const seenByAlpha = (await call('GET', `/api/events/${eventId}`, undefined, alpha)).body;
+    expect(seenByAlpha).toMatchObject({ isDrawn: false });
+    expect(JSON.stringify(seenByAlpha)).not.toMatch(/visib|envelope/i);
     expect((await call('POST', `/api/admin/events/${eventId}/envelopes`, {}, admin)).body.envelopesOpen).toBe(true);
     expect((await call('POST', `/api/events/${eventId}/reveal`, {}, alpha)).body.targets).toHaveLength(1);
   });
